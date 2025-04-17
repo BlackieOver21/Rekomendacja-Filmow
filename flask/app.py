@@ -1,46 +1,36 @@
 from flask import Flask
-from flask_login import LoginManager
-import os
-from dotenv import load_dotenv
+from flask_jwt_extended import JWTManager
+from flask_jwt_extended.exceptions import JWTExtendedException
+from flask import request
 
-from models import User
-from db import db
-from routes.dashboard import dashboard_bp
+from models import db
 from routes.auth import auth_bp
-from routes.main import main_bp
+from routes.profile import profile_bp
+from routes.movies import movie_bp
 
-load_dotenv()   # Read constants from .env file
+from models import db, User
 
-def configuration(db=db):
+# Config
+app = Flask(__name__)
+app.config.from_pyfile('config.py')
 
-    app = Flask(__name__, template_folder='templates')
+# Database
+db.init_app(app)
 
-    #   Initialize database access
-    app.config['SECRET_KEY'] = os.getenv('SECRETKEY')
-    app.config['SQLALCHEMY_DATABASE_URI'] = (
-        f'postgresql://{os.getenv("PGUSER")}:'
-        f'{os.getenv("PGPASSWORD")}@{os.getenv("PGHOST")}:'
-        f'{os.getenv("PGPORT")}/{os.getenv("PGDATABASE")}'
-    )
+# Authentication
+jwt = JWTManager(app)
 
-    db.init_app(app)
+# Blueprints
+app.register_blueprint(auth_bp, url_prefix='/api')
+app.register_blueprint(movie_bp, url_prefix='/api')
+app.register_blueprint(profile_bp, url_prefix='/api')
 
-    app.register_blueprint(auth_bp, url_prefix='/auth') 
-    app.register_blueprint(dashboard_bp, url_prefix='/dashboard')
-    app.register_blueprint(main_bp)
-
-    #   Initialize login manager
-    login_manager = LoginManager(app)
-    login_manager.init_app(app) 
-    login_manager.login_view = 'auth.login'
-    return app, db, login_manager
-
-app, db, login_manager = configuration(db)
-
-#   Define a function to load the user from the database
-@login_manager.user_loader
-def load_user(user_id):
-    return User.query.get(int(user_id))
+# Middleware to log request information
+# @app.before_request
+# def log_request_info():
+#     print("REQUEST DATA")
+#     print("Headers:", request.headers)
+#     print("Body:", request.get_data())
 
 if __name__ == '__main__':
     app.run(debug=True)

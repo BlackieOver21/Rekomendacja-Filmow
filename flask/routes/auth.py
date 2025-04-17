@@ -1,60 +1,55 @@
-from flask import Blueprint, render_template, redirect, url_for, request, flash, jsonify
+from flask import Blueprint, request, jsonify
+from flask_jwt_extended import create_access_token
 from werkzeug.security import generate_password_hash, check_password_hash
-from flask_login import login_user, login_required, logout_user
-from flask_limiter.util import get_remote_address
-from flask_limiter import Limiter
 
-from db import db
-from models import User
+from models import db, User
 
-auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
-limiter = Limiter(get_remote_address, app=None, default_limits=["5 per minute"])
+auth_bp = Blueprint('auth', __name__)
 
-@auth_bp.route('/login', methods=['GET', 'POST'])
-@limiter.limit("5 per minute")
-def login():
-    if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
-        user = User.query.filter_by(username=username).first()
-
-        if user and check_password_hash(user.password, password):
-            login_user(user)
-            flash('Logged in successfully!', 'success')
-            return redirect(url_for('dashboard.dashboard'))
-        else:
-            flash('Invalid credentials, try again.', 'danger')
-    # return render_template('login.html')
-    return jsonify({"message": "You will login here", "status": "in progress"})
-
-@auth_bp.route('/register', methods=['GET', 'POST'])
+@auth_bp.route('/register', methods=['POST'])
 def register():
-    if request.method == 'POST':
-        username = request.form['username']
-        password1 = request.form['password1']
-        password2 = request.form['password2']
+    """
+    Test with:
 
-        if password1 != password2:
-            flash('Passwords should be the same.', 'danger')
-            return redirect(url_for('auth.register'))
+    curl --location 'http://localhost:5000/api/register' \
+    --header 'Content-Type: application/json' \
+    --data '{
+    "username": "test",
+    "password": "test"
+    }'
 
-        existing_user = User.query.filter_by(username=username).first()
-        if existing_user:
-            flash('Username is already taken. Please choose another one.', 'danger')
-            return redirect(url_for('auth.register'))
-        
-        hashed_password = generate_password_hash(password1, method='scrypt')
-        new_user = User(username=username, password=hashed_password)
-        db.session.add(new_user)
-        db.session.commit()
+    Response:
+    {
+    "msg": "Username already exists"
+    }
+    """
+    data = request.get_json()
+    if User.query.filter_by(username=data['username']).first():
+        return jsonify({"msg": "Username already exists"}), 400
 
-        flash('Account created successfully!', 'success')
-        return redirect(url_for('auth.login'))
-    return jsonify({"message": "You will register here", "status": "in progress"})
-    #return render_template('register.html')
+    hashed_pw = generate_password_hash(data['password'])
+    new_user = User(username=data['username'], password=hashed_pw)
+    db.session.add(new_user)
+    db.session.commit()
 
-@auth_bp.route('/logout')
-@login_required
-def logout():
-    logout_user()
-    return redirect(url_for('auth.login'))
+    return jsonify({"msg": "User created"}), 201
+
+@auth_bp.route('/login', methods=['POST'])
+def login():
+    """
+    Test with:
+    
+    curl --location 'http://localhost:5000/api/login' \
+    --header 'Content-Type: application/json' \
+    --data '{
+    "username": "test",
+    "password": "test"
+    }'
+    """
+    data = request.get_json()
+    user = User.query.filter_by(username=data['username']).first()
+
+    if user and check_password_hash(user.password, data['password']):
+        access_token = create_access_token(identity=str(user.id)) 
+        return jsonify(access_token=access_token)
+    return jsonify({"msg": "Invalid credentials"}), 401
