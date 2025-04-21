@@ -3,6 +3,8 @@ from flask_jwt_extended import JWTManager
 from flask_jwt_extended.exceptions import JWTExtendedException
 from flask import request
 
+import misc.initial_db as msc
+
 from models import db
 from routes.auth import auth_bp
 from routes.profile import profile_bp
@@ -33,4 +35,7 @@ app.register_blueprint(profile_bp, url_prefix='/api')
 #     print("Body:", request.get_data())
 
 if __name__ == '__main__':
+    with app.app_context():
+        db.create_all()
+        msc.import_movies_if_empty()
     app.run(debug=True)

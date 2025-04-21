@@ -3,3 +3,6 @@ templates
 __pycache__
 A2.py
 instance
+reco/__pycache__
+routes/__pycache__
+movies_metadata.csv
