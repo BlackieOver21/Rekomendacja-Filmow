@@ -1,0 +1,23 @@
+.title {
+    font-size: 42px;
+    padding-bottom: 0.5rem;
+}
+
+.container {
+    background: var(--mantine-color-dark-8);
+}
+
+.containersWrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 5rem;
+    padding-top: 3rem;
+    padding-bottom: 3rem;
+}
+
+.formWrapper {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 2rem;
+}

@@ -1,0 +1,31 @@
+.root {    
+    padding-top: calc(var(--mantine-spacing-xl) * 4);
+    padding-left: 2.5rem;
+    padding-right: 2.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 3rem;
+}
+
+.title {
+    color: var(--mantine-color-gray-5);
+    font-weight: 900;
+    line-height: 1.05;
+    max-width: 1000px;
+    font-size: 48px;
+  
+    @media (max-width: $mantine-breakpoint-md) {
+      max-width: 100%;
+      font-size: 34px;
+      line-height: 1.15;
+    }
+}
+
+.description {
+    max-width: 550px;
+}
+
+.buttonWrapper {
+    display: flex;
+    gap: 0.5rem
+}

@@ -1,0 +1,52 @@
+.title {
+    font-size: 1.5rem;
+    font-family: var(--font-jost);
+    font-weight: 300;
+    display: flex;
+}
+
+.titleText {
+    color: var(--mantine-color-paleBlue-1)
+}
+
+.titleColor {
+    color: var(--mantine-color-paleBlue-4);
+}
+
+.titleButtonsWrapper {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-left: 1rem;
+    padding-right: 1rem;
+}
+
+.gridPadding {
+    border-bottom: 1px solid var(--mantine-color-dark-4);
+    min-height: 136px;
+}
+
+.grid {
+    background: var(--mantine-color-dark-8);
+}
+
+.activeTab {
+    background: var(--mantine-color-dark-7);
+}
+
+.loginButtonsWrapper {
+    display: flex;
+    gap: 1rem;
+}
+
+.tabsWrapper {
+    display: flex;
+}
+
+.randomMovieButton {
+    color: var(--mantine-color-paleBlue-3);
+}
+
+.tabList {
+    min-height: 36px;
+}
