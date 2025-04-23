@@ -18,6 +18,7 @@ app.config.from_pyfile('config.py')
 
 # Database
 db.init_app(app)
+print('DB init successful.')
 
 # Authentication
 jwt = JWTManager(app)

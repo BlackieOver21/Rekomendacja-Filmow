@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from models import Movies
+from models import Movie
 
 movie_bp = Blueprint('movies', __name__)
 
@@ -15,7 +15,7 @@ def get_movies():
     end = request.args.get('end', default=None, type=int)
 
     # Pobieramy filmy użytkownika
-    query = Movies.query.order_by(Movies.id)
+    query = Movie.query.order_by(Movie.id)
 
     # Jeśli jest zakres, to robimy slice
     if end is not None:

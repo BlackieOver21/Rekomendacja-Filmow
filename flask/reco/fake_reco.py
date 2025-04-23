@@ -1,5 +1,5 @@
 import random
-from models import Movies
+from models import Movie
 
 def reco(user_id):
     """
@@ -7,12 +7,12 @@ def reco(user_id):
     """
     random.seed(user_id)
 
-    movie_count = Movies.query.count()
+    movie_count = Movie.query.count()
     if movie_count == 0:
         return None
 
     random_index = random.randint(0, movie_count - 1)
 
-    recommended_movie = Movies.query.offset(random_index).first()
+    recommended_movie = Movie.query.offset(random_index).first()
 
     return recommended_movie.id if recommended_movie else None
