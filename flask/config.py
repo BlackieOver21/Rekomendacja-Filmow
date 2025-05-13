@@ -10,9 +10,11 @@ from dotenv import load_dotenv
 # PGDATABASE=your_postgres_database
 # JWT_SECRET_KEY=your_jwt_secret_key
 # SECRET_KEY=your_secret_key
+# TMDB_API_KEY=
 
 load_dotenv()
 SQLALCHEMY_DATABASE_URI = f'postgresql://{os.getenv("PGUSER")}:{os.getenv("PGPASSWORD")}@{os.getenv("PGHOST")}:{os.getenv("PGPORT")}/{os.getenv("PGDATABASE")}'
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 JWT_SECRET_KEY = os.getenv('JWT_SECRET_KEY')
 SECRET_KEY = os.getenv('SECRETKEY')
+TMDB_API_KEY = os.getenv('TMDB_API_KEY')

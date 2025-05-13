@@ -51,8 +51,8 @@ def import_movies_if_empty(
     # Load and clean links data
     links_df = pd.read_csv(links_path, usecols=['movieId', 'imdbId', 'tmdbId'], dtype={
         'movieId': 'int32',      # or 'Int64' for nullable ints
-        'imdbId': 'string',      # keeps it as string
-        'tmdbId': 'Int64'        # nullable integer (can hold pd.NA)
+        'imdbId': 'string',     
+        'tmdbId': 'string'        
     })
 
     links_df = links_df[links_df['movieId'].apply(lambda x: str(x).isdigit())]
@@ -63,9 +63,8 @@ def import_movies_if_empty(
     )
 
     # Clean tmdbId: int or None
-    links_df['tmdbId'] = links_df['tmdbId'].apply(
-        lambda x: int(x) if pd.notna(x) and str(x).isdigit() else None
-    )
+
+    links_df['tmdbId'] = pd.Series( [int(x) if str(x).isdigit() else None for x in links_df['tmdbId']] , dtype=object) 
 
 
     links_df = links_df.drop_duplicates(subset=['movieId'])
@@ -76,11 +75,14 @@ def import_movies_if_empty(
         'tmdbId': 'tmdb_id'
     })
 
+    links_df = links_df.drop_duplicates(subset=['tmdb_id'])
+
     # Clean movie dataframe
     df = df.dropna(subset=['id', 'title'])
     df = df[df['id'].apply(lambda x: str(x).isdigit())]
     df['id'] = df['id'].astype('int32')
     df = df.drop_duplicates(subset=['id'])
+    
 
     # Merge link IDs into movies
     df = df.merge(
@@ -89,8 +91,11 @@ def import_movies_if_empty(
         how='left'
     )
 
+
+    # magic lines, won't work at all without them for whatever reason
     df['imdb_id'] = df['imdb_id'].where(pd.notna(df['imdb_id']), None)
     df['tmdb_id'] = df['tmdb_id'].where(pd.notna(df['tmdb_id']), None)
+
 
     #do not try,  2h wasted
     #increase the /\ counter if you fail
@@ -103,6 +108,7 @@ def import_movies_if_empty(
     assert all((isinstance(x, int) or x is None) for x in df['runtime'])
     print(df.head())
 
+    #return
 
     # Extract all unique genres
     unique_genres = {}

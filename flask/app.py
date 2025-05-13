@@ -38,5 +38,6 @@ app.register_blueprint(profile_bp, url_prefix='/api')
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
+        
         msc.import_movies_if_empty()
     app.run(debug=True)

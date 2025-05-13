@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify
 from models import Movie
+import misc.func as fm
 
 movie_bp = Blueprint('movies', __name__)
 
@@ -20,12 +21,18 @@ def get_movies():
     # Jeśli jest zakres, to robimy slice
     if end is not None:
         query = query.slice(start, end)
+
+        if end - start < 10:
+            for mov in query:
+                if mov.image_url != None:
+                    continue
+                fm.update_movie_image(mov)
     else:
         query = query.offset(start)
 
     results = query.all()
 
     # Przekształcamy w JSON
-    movies = [{"id": w.id, "title": w.title} for w in results]
+    movies = [{"id": w.id, "title": w.title, "img" : w.image_url, "tmdb_id" : w.tmdb_id} for w in results]
 
     return jsonify(movies)

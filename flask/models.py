@@ -33,10 +33,13 @@ class Movie(db.Model):
     vote_count = db.Column(db.BigInteger)
     imdb_id = db.Column(db.String(16), unique=True)
     tmdb_id = db.Column(db.Integer, unique=True)
+    image_url = db.Column(db.String(256))
 
     watchlist_items = db.relationship('Watchlist', back_populates='movie')
     genre_items = db.relationship('MovieGenre', back_populates='movie_items')
     rating_items = db.relationship('Rating', back_populates='movie')
+
+    
 
 
 class Genre(db.Model):
