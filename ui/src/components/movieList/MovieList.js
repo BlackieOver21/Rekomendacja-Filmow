@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { filterMovies } from '@/app/utils/filter';
 import {
   SimpleGrid,
   Card,
@@ -18,17 +19,68 @@ import {
   Group,
   Stack,
 } from '@mantine/core';
-
 import { IconSearch, IconChevronDown, IconChevronUp } from '@tabler/icons-react';
-import { filterMovies } from '@/app/utils/filter';
-// import { filterMovies } from '@/app/utils/filter'; // Assuming this is the correct path to your filter function
 
-const FilterSection = ({ title = "Filters", filters, setFilters, genresKey = "genres" }) => {
+const FilterSection = ({
+  title,
+  filters,
+  setFilters,
+  prefix, // to distinguish inclusive/exclusive keys, e.g. 'Inclusive' or 'Exclusive'
+}) => {
+  const genresKey = `genres${prefix}`;
+  const ratingFromKey = `ratingFrom${prefix}`;
+  const ratingToKey = `ratingTo${prefix}`;
+  const yearFromKey = `yearFrom${prefix}`;
+  const yearToKey = `yearTo${prefix}`;
+
+  const handleNumberChange = (key, value) => {
+    setFilters((prev) => ({
+      ...prev,
+      [key]: value === '' ? null : value,
+    }));
+  };
+
   return (
+  
     <Box w="50%">
       <Title align="center" order={3}>{title}</Title>
-      <Stack mt="md" spacing="sm">
-        {/* Rating and year filters can stay the same if shared */}
+      <Stack mt="md" spacing="sm" align="center">
+        <Flex gap="xs" justify="flex-start" align="center" wrap="nowrap">
+          <NumberInput
+            label="Rating from"
+            min={1}
+            max={5}
+            value={filters[ratingFromKey]}
+            onChange={(val) => handleNumberChange(ratingFromKey, val)}
+            hideControls
+            w={80}
+          />
+          <p>-</p>
+          <NumberInput
+            label="Rating to"
+            min={1}
+            max={5}
+            value={filters[ratingToKey]}
+            onChange={(val) => handleNumberChange(ratingToKey, val)}
+            hideControls
+            w={80}
+          />
+          <NumberInput
+            label="Year from"
+            value={filters[yearFromKey]}
+            onChange={(val) => handleNumberChange(yearFromKey, val)}
+            hideControls
+            w={100}
+          />
+          <p>-</p>
+          <NumberInput
+            label="Year to"
+            value={filters[yearToKey]}
+            onChange={(val) => handleNumberChange(yearToKey, val)}
+            hideControls
+            w={100}
+          />
+        </Flex>
 
         <Chip.Group
           size="xs"
@@ -36,14 +88,10 @@ const FilterSection = ({ title = "Filters", filters, setFilters, genresKey = "ge
           value={filters[genresKey] || []}
           onChange={(val) => setFilters(prev => ({ ...prev, [genresKey]: val }))}
         >
-          <Group justify="center" mt="md">
-            <Chip size="xs" value="Action">Action</Chip>
-            <Chip size="xs" value="Adventure">Adventure</Chip>
-            <Chip size="xs" value="Comedy">Comedy</Chip>
-            <Chip size="xs" value="Drama">Drama</Chip>
-            <Chip size="xs" value="Fantasy">Fantasy</Chip>
-            <Chip size="xs" value="Noire">Noire</Chip>
-            <Chip size="xs" value="Thriller">Thriller</Chip>
+          <Group justify="center" mt="md" wrap="wrap">
+            {['Action', 'Adventure', 'Comedy', 'Drama', 'Fantasy', 'Noire', 'Thriller'].map((genre) => (
+              <Chip size="xs" key={genre} value={genre}>{genre}</Chip>
+            ))}
           </Group>
         </Chip.Group>
       </Stack>
@@ -52,24 +100,25 @@ const FilterSection = ({ title = "Filters", filters, setFilters, genresKey = "ge
 };
 
 export default function MovieList() {
-  
   const [movies, setMovies] = useState([]);
+  const [filteredMovies, setFilteredMovies] = useState([]);
   const [filters, setFilters] = useState({
-    ratingFrom: null,
-    ratingTo: null,
-    yearFrom: null,
-    yearTo: null,
-    genresInclusive: [], // previously: genres
+    search: '',
+    ratingFromInclusive: null,
+    ratingToInclusive: null,
+    yearFromInclusive: null,
+    yearToInclusive: null,
+    genresInclusive: [],
+    ratingFromExclusive: null,
+    ratingToExclusive: null,
+    yearFromExclusive: null,
+    yearToExclusive: null,
     genresExclusive: [],
   });
-  const [search, setSearch] = useState('');
   const [opened, setOpened] = useState(false);
-  const [filteredMovies, setFilteredMovies] = useState([]);
 
-  // Replace this with your real backend URL
   const MOVIES_API_URL = 'http://192.168.94.12:5000/api/movies';
 
-  // Fetch movies from backend
   useEffect(() => {
     async function fetchMovies() {
       try {
@@ -79,29 +128,26 @@ export default function MovieList() {
         setMovies(data);
       } catch (error) {
         console.error('Failed to fetch movies:', error);
-        setMovies([]); // fallback empty
+        setMovies([]);
       }
     }
-
     fetchMovies();
   }, []);
 
-  
   useEffect(() => {
-    const filtered = filterMovies(movies, {
-      search,
-      ...filters,
-    });
+    const filtered = filterMovies(movies, filters);
     setFilteredMovies(filtered);
-  }, [search, filters, movies]);
-  
+  }, [filters, movies]);
 
   return (
     <Container>
       <Flex direction="column" justify="center" align="center" h="100%" gap="sm">
         <TextInput
-          value={search}
-          onChange={(event) => setSearch(event.currentTarget.value)}
+          value={filters.search}
+          onChange={(event) => {
+            const value = event?.currentTarget?.value ?? '';
+            setFilters(prev => ({ ...prev, search: value }));
+          }}
           placeholder="Search titles"
           w="55%"
           size="sm"
@@ -115,37 +161,26 @@ export default function MovieList() {
             variant="light"
             color="#71787f"
             style={{ backgroundColor: 'transparent', border: 'none' }}
-            onClick={() => setOpened((o) => !o)}
+            onClick={() => setOpened(o => !o)}
             mb="sm"
             mx="auto"
           >
-            {opened ? (
-              <>
-                Filters <IconChevronUp size={16} />
-              </>
-            ) : (
-              <>
-                Filters <IconChevronDown size={16} />
-              </>
-            )}
+            {opened ? <>Filters <IconChevronUp size={16} /></> : <>Filters <IconChevronDown size={16} /></>}
           </Button>
 
           <Collapse w="100%" in={opened}>
-            <Flex w="100%" gap="sm" justify="center">
-              {/* <FilterSection title="Left Side" filters={filters} setFilters={setFilters} />
-              <FilterSection title="Right Side" filters={filters} setFilters={setFilters} /> */}
+                <Flex w="100%" gap="sm" justify="center">
               <FilterSection
-                title="Include Genres"
+                title="Include Filters"
                 filters={filters}
                 setFilters={setFilters}
-                genresKey="genresInclusive"
+                prefix="Inclusive"
               />
-
               <FilterSection
-                title="Exclude Genres"
+                title="Exclude Filters"
                 filters={filters}
                 setFilters={setFilters}
-                genresKey="genresExclusive"
+                prefix="Exclusive"
               />
             </Flex>
           </Collapse>
@@ -154,20 +189,13 @@ export default function MovieList() {
         <SimpleGrid cols={4} spacing="lg" breakpoints={[{ maxWidth: 'sm', cols: 1 }]}>
           {filteredMovies.map((movie, index) => (
             <a key={index} href={`/movie/${movie.id}`} style={{ cursor: 'pointer', textDecoration: 'none' }}>
-                <Card key={index} shadow="sm" padding="lg" radius="md" withBorder
-                    href={`/movie/${movie.id}`}
-                    style={{ cursor: 'pointer' }}>
-                  <Card.Section>
-                    <Image src={movie.poster} height={180} alt={movie.title} fit="cover" />
-                  </Card.Section>
-
-                  <Text weight={500} size="lg" mt="md">
-                    {movie.title}
-                  </Text>
-                  <Text size="sm" color="dimmed">
-                    {movie.year} • {movie.genre}
-                  </Text>
-                </Card>
+              <Card shadow="sm" padding="lg" radius="md" withBorder>
+                <Card.Section>
+                  <Image src={movie.poster} height={180} alt={movie.title} fit="cover" />
+                </Card.Section>
+                <Text weight={500} size="lg" mt="md">{movie.title}</Text>
+                <Text size="sm" color="dimmed">{movie.year} • {movie.genre.join(', ')}</Text>
+              </Card>
             </a>
           ))}
         </SimpleGrid>

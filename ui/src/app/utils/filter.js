@@ -1,38 +1,57 @@
-export function filterMovies(movies, criteria) {
+export function filterMovies(movies, filters) {
   const {
     search = '',
-    genresInclusive = [],
-    genresExclusive = [],
-    ratingFrom = null,
-    ratingTo = null,
-    yearFrom = null,
-    yearTo = null,
-  } = criteria;
+    ratingFromInclusive,
+    ratingToInclusive,
+    yearFromInclusive,
+    yearToInclusive,
+    genresInclusive,
+    ratingFromExclusive,
+    ratingToExclusive,
+    yearFromExclusive,
+    yearToExclusive,
+    genresExclusive,
+  } = filters;
 
   return movies.filter((movie) => {
-    const matchesSearch =
-      search === '' || movie.title.toLowerCase().includes(search.toLowerCase());
+    const movieGenres = Array.isArray(movie.genre)
+      ? movie.genre
+      : movie.genre.split(',').map(g => g.trim()); // ensure array
 
-    const matchesIncludeGenre =
-      genresInclusive.length === 0 || genresInclusive.includes(movie.genre);
+    if (search && !movie.title.toLowerCase().includes(search.toLowerCase())) return false;
 
-    const matchesExcludeGenre =
-      genresExclusive.length === 0 || !genresExclusive.includes(movie.genre);
+    if (genresInclusive.length > 0) {
+      const matchesInclusive = movieGenres.some(g => genresInclusive.includes(g));
+      if (!matchesInclusive) return false;
+    }
 
-    const matchesRating =
-      (ratingFrom === null || movie.rating >= ratingFrom) &&
-      (ratingTo === null || movie.rating <= ratingTo);
+    if (ratingFromInclusive != null && movie.rating < ratingFromInclusive) return false;
+    if (ratingToInclusive != null && movie.rating > ratingToInclusive) return false;
 
-    const matchesYear =
-      (yearFrom === null || movie.year >= yearFrom) &&
-      (yearTo === null || movie.year <= yearTo);
+    if (yearFromInclusive != null && movie.year < yearFromInclusive) return false;
+    if (yearToInclusive != null && movie.year > yearToInclusive) return false;
 
-    return (
-      matchesSearch &&
-      matchesIncludeGenre &&
-      matchesExcludeGenre &&
-      matchesRating &&
-      matchesYear
-    );
+    // --- Exclusive filters ---
+
+    if (genresExclusive.length > 0) {
+      const matchesExclusive = movieGenres.some(g => genresExclusive.includes(g));
+      if (matchesExclusive) return false;
+    }
+
+    if (
+      ratingFromExclusive != null &&
+      ratingToExclusive != null &&
+      movie.rating >= ratingFromExclusive &&
+      movie.rating <= ratingToExclusive
+    ) return false;
+    
+    if (
+      yearFromExclusive != null &&
+      yearToExclusive != null &&
+      movie.year >= yearFromExclusive &&
+      movie.year <= yearToExclusive
+    ) return false;
+
+    return true;
   });
 }
