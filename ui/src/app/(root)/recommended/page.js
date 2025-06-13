@@ -6,11 +6,30 @@ import { useLocalStorage } from "@mantine/hooks";
 import { Button, Text, Title } from "@mantine/core";
 import Link from "next/link";
 import MovieList from "@/components/movieList/MovieList";
+import UserAuth from "@/app/utils/auth";
+import  { filterMovies }  from "@/app/utils/filter";
+import { useEffect, useState } from "react";
 
 export default function Recommended() {
-  const [user, setUser] = useLocalStorage(defaultUser);
+  const auth = new UserAuth();
+  //const [user, setUser] = auth.getUser() || useLocalStorage(defaultUser);
+  //const [token, setToken] = auth.getToken();
+  const [isLoggedIn, setIsLoggedIn] = useState(null);
+
+  useEffect(() => {
+    const checkLogin = async () => {
+      const result = await auth.isLoggedIn();
+      setIsLoggedIn(result);
+    };
+    checkLogin();
+  }, []);
+
+  if (isLoggedIn === null) {
+    return <div>Loading...</div>; // or spinner
+  }
+
   return (
-    <>{user ?
+    <>{isLoggedIn ?
       <MovieList/>
       :
       <Ad/>
