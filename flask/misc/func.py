@@ -85,3 +85,17 @@ def batch_update_movie_images():
         if update_movie_image(movie):
             updated += 1
     return f"Updated {updated}/{len(movies)} movie images"
+
+
+def serialize_movie(movie):
+    """
+    Helper to turn a Movie into JSON-friendly dict.
+    """
+    genres = [g.genre_items.desc for g in movie.genre_items if g.genre_items]
+    return {
+        "id": movie.id,
+        "title": movie.title,
+        "year": movie.release_date.year if movie.release_date else None,
+        "genre": genres,
+        "poster": movie.image_url,
+    }

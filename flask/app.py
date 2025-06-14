@@ -9,6 +9,7 @@ from models import db
 from routes.auth import auth_bp
 from routes.profile import profile_bp
 from routes.movies import movie_bp
+from routes.rating import rating_bp
 
 from models import db, User
 
@@ -27,6 +28,7 @@ jwt = JWTManager(app)
 app.register_blueprint(auth_bp, url_prefix='/api')
 app.register_blueprint(movie_bp, url_prefix='/api')
 app.register_blueprint(profile_bp, url_prefix='/api')
+app.register_blueprint(rating_bp, url_prefix='/api')
 
 # Middleware to log request information
 # @app.before_request

@@ -1,38 +1,48 @@
-from flask import Blueprint, request, jsonify
-from models import Movie
+from flask import Blueprint, request, jsonify, abort
+from models import Movie, db
 import misc.func as fm
 
 movie_bp = Blueprint('movies', __name__)
 
 @movie_bp.route('/movies', methods=['GET'])
-def get_movies():
+def list_movies():
     """
-    Test with:
-    
-    curl --location 'http://localhost:5000/api/movies?start=2&end=5'
+    Movie List (wszystkie)
+    Optional query parameters:
+      - start: pagination offset (default: 0)
+      - end: pagination end (exclusive)
+      - user_id: if provided, will flag recommended movies for that user
     """
-    # Pobierz zakres z query stringa (domyślnie wszystko)
     start = request.args.get('start', default=0, type=int)
     end = request.args.get('end', default=None, type=int)
+    user_id = request.args.get('user_id', type=int)
 
-    # Pobieramy filmy użytkownika
     query = Movie.query.order_by(Movie.id)
-
-    # Jeśli jest zakres, to robimy slice
     if end is not None:
         query = query.slice(start, end)
-
-        if end - start < 10:
-            for mov in query:
-                if mov.image_url != None:
-                    continue
-                fm.update_movie_image(mov)
     else:
         query = query.offset(start)
+    movies = query.all()
 
-    results = query.all()
+    # If user_id provided, fetch recommendations and add flag
+    recommended_ids = set()
+    if user_id is not None:
+        try:
+            recommended_ids = set(fm.get_recommendations_for_user(user_id))
+        except Exception:
+            abort(400, description="Invalid user or recommendation error")
 
-    # Przekształcamy w JSON
-    movies = [{"id": w.id, "title": w.title, "img" : w.image_url, "tmdb_id" : w.tmdb_id} for w in results]
+    # Ensure images for small ranges
+    if end is not None and end - start < 10:
+        for mov in movies:
+            if not mov.image_url:
+                fm.update_movie_image(mov)
 
-    return jsonify(movies)
+    result = []
+    for m in movies:
+        data = fm.serialize_movie(m)
+        if user_id is not None:
+            data['recommended'] = 1 if m.id in recommended_ids else 0
+        result.append(data)
+
+    return jsonify(result)
