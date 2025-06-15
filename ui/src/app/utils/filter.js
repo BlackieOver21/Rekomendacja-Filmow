@@ -11,6 +11,7 @@ export function filterMovies(movies, filters) {
     yearFromExclusive,
     yearToExclusive,
     genresExclusive,
+    recommended = false,
   } = filters;
 
   return movies.filter((movie) => {
@@ -55,10 +56,8 @@ export function filterMovies(movies, filters) {
     // --- Recommeneded filter ---
 
     if (
-      yearFromExclusive != null &&
-      yearToExclusive != null &&
-      movie.year >= yearFromExclusive &&
-      movie.year <= yearToExclusive
+      recommended &&
+      (!movie.recommended || movie.recommended !== true)
     ) return false;
 
     return true;

@@ -102,7 +102,7 @@ const FilterSection = ({
   );
 };
 
-export default function MovieList() {
+export default function MovieList(props) {
   const [movies, setMovies] = useState([]);
   const [filteredMovies, setFilteredMovies] = useState([]);
   const [filters, setFilters] = useState({
@@ -117,6 +117,7 @@ export default function MovieList() {
     yearFromExclusive: null,
     yearToExclusive: null,
     genresExclusive: [],
+    recommended: props.recommended,
   });
   const [opened, setOpened] = useState(false);
 

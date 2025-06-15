@@ -30,7 +30,7 @@ export default function Recommended() {
 
   return (
     <>{isLoggedIn ?
-      <MovieList/>
+      <MovieList recommended={true}/>
       :
       <Ad/>
     }</>

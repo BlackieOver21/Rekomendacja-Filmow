@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import UserAuth from "@/app/utils/auth";
 import UserReview from "@/app/utils/review";
-import { NumberInput, Textarea, Button, Text } from '@mantine/core';
+import { NumberInput, Textarea, Button, Text, Rating } from '@mantine/core';
 
 const MoviePage = () => {
   const [movieId, setMovieId] = useState(null);
@@ -84,24 +84,30 @@ const MoviePage = () => {
   if (loading) return <Text>Loading...</Text>;
   if (!movie) return <Text>Movie not found.</Text>;
 
-  return (
-    <div style={{ padding: '20px', maxWidth: '900px', margin: '0 auto' }}>
-      <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-start' }}>
-        <img
-          src={movie.poster}
-          alt={`${movie.title} poster`}
-          style={{ width: '250px', borderRadius: '8px', boxShadow: '0 4px 8px rgba(0,0,0,0.2)' }}
-        />
-        <div>
-          <h1>{movie.title}</h1>
-          <p><strong>Year:</strong> {movie.year}</p>
-          <p><strong>Genres:</strong> {movie.genre.join(', ')}</p>
-          {movie.description && <p>{movie.description}</p>}
-        </div>
+  return (<div style={{ padding: '20px', maxWidth: '900px', margin: '0 auto' }}>
+  <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-start' }}>
+    <img
+      src={movie.poster}
+      alt={`${movie.title} poster`}
+      style={{ width: '250px', height: '375px', objectFit: 'cover', borderRadius: '8px', boxShadow: '0 4px 8px rgba(0,0,0,0.2)' }}
+    />
+    <div>
+      <h1>{movie.title}</h1>
+      <p><strong>Year:</strong> {movie.year}</p>
+      <p><strong>Genres:</strong> {movie.genre.join(', ')}</p>
+
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <strong>Rating:</strong>
+        <Rating value={movie.rating} readOnly fractions={2} />
+        <span>{movie.rating}</span>
       </div>
 
-      <h2 style={{ marginTop: '2rem' }}>Your Review</h2>
-      {user ? (
+      {movie.description && <p style={{ marginTop: '0.5rem' }}>{movie.description}</p>}
+    </div>
+  </div>
+
+       <h2 style={{ marginTop: '2rem' }}>Your Review</h2>
+       {user ? (
         <>
           <NumberInput
             label="Rating"
@@ -134,7 +140,7 @@ const MoviePage = () => {
           </div>
         ))
       )}
-    </div>
+</div>
   );
 };
 
