@@ -1,8 +1,5 @@
 
 export const defaultUser = {
-    key: "currentUser",
+    key: "user",
     defaultValue: null
-    // defaultValue: {
-    //     name: "TestUser",
-    // }
 };

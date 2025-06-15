@@ -1,9 +1,9 @@
 'use client';
 
-import { usePathname } from "next/navigation";
+import { redirect, usePathname } from "next/navigation";
 import styles from "./mainHeader.module.css";
 import { Button, Grid, Menu, Tabs } from "@mantine/core";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useLocalStorage } from "@mantine/hooks";
 import { } from "@tabler/icons-react";
@@ -12,6 +12,7 @@ import { IconPlayerPlay } from "@tabler/icons-react";
 import { IconSettings } from "@tabler/icons-react";
 import { IconLogout } from "@tabler/icons-react";
 import { defaultUser } from "@/storage/storage";
+import UserAuth from "@/app/utils/auth";
 
 
 const loginButtonBlacklist = ["/login"];
@@ -41,6 +42,13 @@ export default function MainHeader() {
 function LoginButtons() {
   const path = usePathname();
   const [user, setUser] = useLocalStorage(defaultUser);
+  
+  const handleLogout = useCallback(() => {
+    const auth = new UserAuth();
+    auth.logout();
+    setUser(null);
+    redirect("/recommended");
+  });
 
   return (
     <div className={styles.loginButtonsWrapper}>
@@ -53,7 +61,7 @@ function LoginButtons() {
         >
           <Menu.Target>
             <Button variant="outline" color="dark" rightSection={<IconChevronDown size={18} stroke={1.5} />} pr={12}>
-              {user.name}
+              {user.username}
             </Button>
           </Menu.Target>
           <Menu.Dropdown>
@@ -69,9 +77,7 @@ function LoginButtons() {
               </Menu.Item>
             </Link>
             
-            <Menu.Item leftSection={<IconLogout size={16} stroke={1.5} onClick={() => {
-                /* TODO log out and redirect */
-            }}/>}>
+            <Menu.Item onClick={handleLogout} leftSection={<IconLogout size={16} stroke={1.5} />}>
               Log out
             </Menu.Item>
           </Menu.Dropdown>

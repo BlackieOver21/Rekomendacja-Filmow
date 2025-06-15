@@ -157,10 +157,10 @@ export default function MovieList(props) {
 
   // Apply filters whenever movies or filters change
   useEffect(() => {
-    console.log('Movies:', movies);
-    console.log('Filters:', filters);
+    // console.log('Movies:', movies);
+    // console.log('Filters:', filters);
     const filtered = filterMovies(movies, filters);
-    console.log('Filtered:', filtered);
+    // console.log('Filtered:', filtered);
     setFilteredMovies(filtered);
   }, [movies, filters]);
 
@@ -190,7 +190,7 @@ export default function MovieList(props) {
   //   setFilteredMovies(filtered);
   // }, [filters, movies]);
   
-  console.log(filteredMovies.map(m => m.id));
+  // console.log(filteredMovies.map(m => m.id));
 
   return (
     <Container>

@@ -10,7 +10,7 @@ export async function GET() {
         (data) => { return data.id; }
     );
 
-    console.log(id)
+    // console.log(id)
 
     redirect('/movie/' + id);
 }
