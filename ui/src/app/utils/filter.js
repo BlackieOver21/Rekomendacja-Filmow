@@ -44,7 +44,16 @@ export function filterMovies(movies, filters) {
       movie.rating >= ratingFromExclusive &&
       movie.rating <= ratingToExclusive
     ) return false;
-    
+
+    if (
+      yearFromExclusive != null &&
+      yearToExclusive != null &&
+      movie.year >= yearFromExclusive &&
+      movie.year <= yearToExclusive
+    ) return false;
+
+    // --- Recommeneded filter ---
+
     if (
       yearFromExclusive != null &&
       yearToExclusive != null &&

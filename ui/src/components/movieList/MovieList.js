@@ -18,8 +18,11 @@ import {
   Chip,
   Group,
   Stack,
+  Rating,
+  List,
+  PasswordInput,
 } from '@mantine/core';
-import { IconSearch, IconChevronDown, IconChevronUp } from '@tabler/icons-react';
+import { IconSearch, IconChevronDown, IconChevronUp, IconGalaxy } from '@tabler/icons-react';
 
 const FilterSection = ({
   title,
@@ -203,3 +206,4 @@ export default function MovieList() {
     </Container>
   );
 }
+
