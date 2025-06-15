@@ -30,7 +30,7 @@ const MoviePage = () => {
 
     const load = async () => {
       try {
-        const movieRes = await fetch(`http://192.168.94.12:5000/api/movies/${movieId}`);
+        const movieRes = await fetch(`http://127.0.0.1:5000/api/movies/${movieId}`);
         if (movieRes.ok) {
           const data = await movieRes.json();
           setMovie(data);

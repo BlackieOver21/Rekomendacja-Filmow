@@ -1,10 +1,10 @@
 class UserReview {
     constructor() {
-        this.loginURL = "http://192.168.94.12:5000/api/login";
-        this.registerURL = "http://192.168.94.12:5000/api/register" ;
-        this.authenticateURL = "http://192.168.94.12:5000/api/check-auth";
+        this.loginURL = "http://127.0.0.1:5000/api/login";
+        this.registerURL = "http://127.0.0.1:5000/api/register" ;
+        this.authenticateURL = "http://127.0.0.1:5000/api/check-auth";
     }async fetchMovieReviews(movieId, token) {
-        const res = await fetch(`http://192.168.94.12:5000/api/reviews/movie/${movieId}`, {
+        const res = await fetch(`http://127.0.0.1:5000/api/reviews/movie/${movieId}`, {
             headers: token ? { Authorization: `Bearer ${token}` } : {},
         });
         if (!res.ok) throw new Error('Failed to fetch movie reviews');
@@ -12,7 +12,7 @@ class UserReview {
     }
 
     async fetchUserReviews(userId, token) {
-        const res = await fetch(`http://192.168.94.12:5000/api/reviews/user/${userId}`, {
+        const res = await fetch(`http://127.0.0.1:5000/api/reviews/user/${userId}`, {
             headers: {
                 Authorization: `Bearer ${token}`,
             },
@@ -24,8 +24,8 @@ class UserReview {
     async submitReview({ userId, movieId, rating, text, reviewId, token }) {
         const method = reviewId ? 'PUT' : 'POST';
         const endpoint = reviewId
-            ? `http://192.168.94.12:5000/api/reviews/${reviewId}`
-            : 'http://192.168.94.12:5000/api/reviews';
+            ? `http://127.0.0.1:5000/api/reviews/${reviewId}`
+            : 'http://127.0.0.1:5000/api/reviews';
 
         const body = {
             user_id: userId,

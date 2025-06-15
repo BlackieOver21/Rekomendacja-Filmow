@@ -4,9 +4,9 @@ class UserAuth {
         this.storageKey = storageKey;
         this.tokenKey = tokenKey;
 
-        this.loginURL = "http://192.168.94.12:5000/api/login";
-        this.registerURL = "http://192.168.94.12:5000/api/register" ;
-        this.authenticateURL = "http://192.168.94.12:5000/api/check-auth";
+        this.loginURL = "http://127.0.0.1:5000/api/login";
+        this.registerURL = "http://127.0.0.1:5000/api/register" ;
+        this.authenticateURL = "http://127.0.0.1:5000/api/auth/check";
     }
 
     async register(username, password) {
@@ -18,7 +18,9 @@ class UserAuth {
   
         if (res.ok) {
             const data = await res.json();
-            this.setToken(data.token); // Assuming 'data.user' contains user information
+            console.log(data);
+            this.setToken(data.access_token);  // <-- access_token ??
+            this.setUser(data.user); 
             return data.user;
         } else {
             const data = await res.json();
@@ -35,8 +37,8 @@ class UserAuth {
   
         if (res.ok) {
             const data = await res.json();
-            this.setUser(data.user); // Assuming 'data.user' contains user information
-            this.setToken(data.token); // Assuming 'data.user' contains user information
+            this.setToken(data.access_token);   // Assuming the response contains an access_token
+            this.setUser(data.user);            // Assuming the response contains user data as JSON
             return data.user;
         } else {
             this.logout();
@@ -46,15 +48,22 @@ class UserAuth {
     }
   
     async isLoggedIn() {
-        const user = this.getUser();
         const token = this.getToken();
+        if (!token) return false; // no token means not logged in
 
-        const res = await fetch(this.authenticateURL, {
-            method: "GET",
-            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
-        });
-  
-        return res.ok;
+        try {
+            const res = await fetch(this.authenticateURL, {
+                method: "GET",
+                headers: { 
+                    "Content-Type": "application/json", 
+                    "Authorization": `Bearer ${token}` 
+                },
+            });
+            return res.ok;
+        } catch (error) {
+            console.error("Auth check failed:", error);
+            return false;
+        }
     }
 
     getUser() {
@@ -82,6 +91,16 @@ class UserAuth {
             return localStorage.getItem(this.tokenKey);
         }
         return null;
+    }
+
+    getUserId() {
+        const user = this.getUser();
+        return user ? user.id : null;
+    }
+
+    getUsername() {
+        const user = this.getUser();
+        return user ? user.username : null;
     }
 
     logout() {

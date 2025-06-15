@@ -1,4 +1,4 @@
-'use client';
+//'use client';
 
 import { useState, useEffect } from 'react';
 import { filterMovies } from '@/app/utils/filter';
@@ -121,27 +121,76 @@ export default function MovieList(props) {
   });
   const [opened, setOpened] = useState(false);
 
-  const MOVIES_API_URL = 'http://192.168.94.12:5000/api/movies';
+  const [startIndex, setStartIndex] = useState(0);
+  const batchSize = 10;
+  const pageSize = 20; // how many movies per batch
+  const [loading, setLoading] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
 
-  useEffect(() => {
-    async function fetchMovies() {
-      try {
-        const response = await fetch(MOVIES_API_URL);
-        if (!response.ok) throw new Error('Network response was not ok');
-        const data = await response.json();
-        setMovies(data);
-      } catch (error) {
-        console.error('Failed to fetch movies:', error);
-        setMovies([]);
-      }
+  const [start, setStart] = useState(0);
+
+  async function fetchMovies(startIndex) {
+    try {
+      const res = await fetch(`http://localhost:5000/api/movies?start=${startIndex}&end=${startIndex + batchSize}`);
+      if (!res.ok) throw new Error('Failed to fetch movies');
+      const data = await res.json();
+
+      // Append new movies
+      setMovies((prev) => {
+        // Avoid duplicates in case API returns overlapping data
+        const newMovies = data.filter(m => !prev.some(pm => pm.id === m.id));
+        return [...prev, ...newMovies];
+      });
+
+      // Update start only after successful fetch
+      setStart(startIndex + batchSize);
+
+    } catch (error) {
+      console.error(error);
     }
-    fetchMovies();
+  }
+
+  // Fetch first batch only once on mount
+  useEffect(() => {
+    fetchMovies(0);
   }, []);
 
+  // Apply filters whenever movies or filters change
   useEffect(() => {
+    console.log('Movies:', movies);
+    console.log('Filters:', filters);
     const filtered = filterMovies(movies, filters);
+    console.log('Filtered:', filtered);
     setFilteredMovies(filtered);
-  }, [filters, movies]);
+  }, [movies, filters]);
+
+  const loadMore = () => {
+    fetchMovies(start);
+  };
+
+  // const MOVIES_API_URL = 'http://127.0.0.1:5000/api/movies';
+
+  // useEffect(() => {
+  //   async function fetchMovies() {
+  //     try {
+  //       const response = await fetch(MOVIES_API_URL);
+  //       if (!response.ok) throw new Error('Network response was not ok');
+  //       const data = await response.json();
+  //       setMovies(data);
+  //     } catch (error) {
+  //       console.error('Failed to fetch movies:', error);
+  //       setMovies([]);
+  //     }
+  //   }
+  //   fetchMovies();
+  // }, []);
+
+  // useEffect(() => {
+  //   const filtered = filterMovies(movies, filters);
+  //   setFilteredMovies(filtered);
+  // }, [filters, movies]);
+  
+  console.log(filteredMovies.map(m => m.id));
 
   return (
     <Container>
@@ -190,7 +239,7 @@ export default function MovieList(props) {
           </Collapse>
         </Flex>
 
-        <SimpleGrid cols={4} spacing="lg" breakpoints={[{ maxWidth: 'sm', cols: 1 }]}>
+        {/* <SimpleGrid cols={4} spacing="lg" breakpoints={[{ maxWidth: 'sm', cols: 1 }]}>
           {filteredMovies.map((movie, index) => (
             <a key={index} href={`/movie/${movie.id}`} style={{ cursor: 'pointer', textDecoration: 'none' }}>
               <Card shadow="sm" padding="lg" radius="md" withBorder>
@@ -202,7 +251,30 @@ export default function MovieList(props) {
               </Card>
             </a>
           ))}
-        </SimpleGrid>
+        </SimpleGrid> */}
+
+
+          <Flex direction="column" align="center" justify="center" gap="md" mb="xl">
+            {filteredMovies.length === 0 ? (
+            <Text>No movies match your filters.</Text>
+          ) : (
+                <SimpleGrid cols={4} spacing="lg" breakpoints={[{ maxWidth: 'sm', cols: 1 }]}>
+                  {filteredMovies.map((movie) => (
+                    <a key={movie.id} href={`/movie/${movie.id}`} style={{ cursor: 'pointer', textDecoration: 'none' }}>
+                      <Card shadow="sm" padding="lg" radius="md" withBorder>
+                        <Card.Section>
+                          <Image src={movie.poster} height={180} alt={movie.title} fit="cover" />
+                        </Card.Section>
+                        <Text weight={500} size="lg" mt="md">{movie.title}</Text>
+                        <Text size="sm" color="dimmed">{movie.year} • {movie.genre.join(', ')}</Text>
+                      </Card>
+                    </a>
+                  ))}
+                </SimpleGrid>
+              )}
+
+            <Button mt="xl" onClick={loadMore}>Load More</Button>
+        </Flex>
       </Flex>
     </Container>
   );
