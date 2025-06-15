@@ -108,9 +108,11 @@ function Navigation() {
         {recommendationTabs.includes(path) && <>
           <Tab link="/recommended" text="Recommended" activeTab={activeTab}/>
           <Tab link="/trending" text="Trending" activeTab={activeTab}/>
-          <Button variant="transparent" className={styles.randomMovieButton}>
-            Random movie
-          </Button>
+          <Link href='/movie/random'>
+            <Button variant="transparent" className={styles.randomMovieButton}>
+              Random movie
+            </Button>
+          </Link>
         </>}
         {path.startsWith("/profile") && <>
           <Tab link="/profile/watchlist" text="Watchlist" activeTab={activeTab}/>
