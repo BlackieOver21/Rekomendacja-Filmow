@@ -4,6 +4,6 @@ import MovieList from "@/components/movieList/MovieList";
 
 export default function Trending() {
   return (
-    <MovieList recommended={false}/>
+    <MovieList recommended={false} endpoint='movies'/>
   );
 }

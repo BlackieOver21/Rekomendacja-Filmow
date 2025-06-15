@@ -4,6 +4,6 @@ import MovieList from "@/components/movieList/MovieList";
 
 export default function Watched() {
   return (
-    <MovieList/>
+    <MovieList endpoint='watched'/>
   );
 }

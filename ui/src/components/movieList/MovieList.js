@@ -23,6 +23,9 @@ import {
   PasswordInput,
 } from '@mantine/core';
 import { IconSearch, IconChevronDown, IconChevronUp, IconGalaxy } from '@tabler/icons-react';
+import { useLocalStorage } from '@mantine/hooks';
+import { defaultUser } from '@/storage/storage';
+import UserAuth from '@/app/utils/auth';
 
 const FilterSection = ({
   title,
@@ -120,7 +123,7 @@ export default function MovieList(props) {
     recommended: props.recommended,
   });
   const [opened, setOpened] = useState(false);
-
+  const [user, setUser] = useLocalStorage(defaultUser);
   const [startIndex, setStartIndex] = useState(0);
   const batchSize = 10;
   const pageSize = 20; // how many movies per batch
@@ -128,10 +131,23 @@ export default function MovieList(props) {
   const [hasMore, setHasMore] = useState(true);
 
   const [start, setStart] = useState(0);
+  const auth = new UserAuth();
 
   async function fetchMovies(startIndex) {
     try {
-      const res = await fetch(`http://localhost:5000/api/movies?start=${startIndex}&end=${startIndex + batchSize}`);
+      const recommendationProp = (props.recommended && user) ? '&user_id=' + user.id : '';
+      const headers = (props.endpoint !== 'movies') ? {
+        headers: { 
+            "Content-Type": "application/json", 
+            "Authorization": `Bearer ${auth.getToken()}` 
+        }
+      } : undefined;
+      
+      const res = await fetch(
+        `http://localhost:5000/api/${props.endpoint}?start=${startIndex}&end=${startIndex + batchSize}${recommendationProp}`,
+        headers
+      );
+      
       if (!res.ok) throw new Error('Failed to fetch movies');
       const data = await res.json();
 
@@ -153,7 +169,7 @@ export default function MovieList(props) {
   // Fetch first batch only once on mount
   useEffect(() => {
     fetchMovies(0);
-  }, []);
+  }, [user, props, batchSize]);
 
   // Apply filters whenever movies or filters change
   useEffect(() => {

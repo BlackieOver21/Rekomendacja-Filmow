@@ -4,6 +4,6 @@ import MovieList from "@/components/movieList/MovieList";
 
 export default function Watchlist() {
   return (
-    <MovieList/>
+      <MovieList endpoint='watchlist'/>
   );
 }
