@@ -2,6 +2,7 @@ from flask import current_app
 from models import Movie, db
 import requests
 from config import TMDB_API_KEY
+from time import sleep
 
 def fetch_movie_image(movie: Movie) -> str:
     """
@@ -84,6 +85,7 @@ def batch_update_movie_images():
     for movie in movies:
         if update_movie_image(movie):
             updated += 1
+            sleep(0.05) #limit request rate
     return f"Updated {updated}/{len(movies)} movie images"
 
 
