@@ -27,7 +27,7 @@ def get_watchlist():
     results = query.all()
 
     # Przekształcamy w JSON
-    watchlist = [{"id": w.id, "title": w.title} for w in results]
+    watchlist = [{"id": w.user_id, "title": w.title} for w in results]
 
     return jsonify(watchlist)
 
@@ -112,7 +112,7 @@ def recommendation():
     """
     Test with:
 
-    curl --location 'http://192.168.8.104:5000/api/recommendation' \
+    curl --location 'http://localhost:5000/api/recommendation' \
     --header 'Authorization: Bearer <JWT token>
     """
     user_id = get_jwt_identity()
