@@ -21,12 +21,15 @@ import {
   Rating,
   List,
   PasswordInput,
+  BackgroundImage,
 } from '@mantine/core';
 import { IconSearch, IconChevronDown, IconChevronUp, IconGalaxy } from '@tabler/icons-react';
 import { useLocalStorage } from '@mantine/hooks';
 import { defaultUser } from '@/storage/storage';
 import UserAuth from '@/app/utils/auth';
 import Link from 'next/link';
+import style from "./movieList.module.css";
+import { IconStarFilled } from '@tabler/icons-react';
 
 const FilterSection = ({
   title,
@@ -182,7 +185,7 @@ export default function MovieList(props) {
   };
 
   return (
-    <Container>
+    <>
       <Flex direction="column" justify="center" align="center" h="100%" gap="sm">
         <TextInput
           value={filters.search}
@@ -231,15 +234,33 @@ export default function MovieList(props) {
             {filteredMovies.length === 0 ? (
             <Text>No movies match your filters.</Text>
           ) : (
-                <SimpleGrid cols={4} spacing="lg" breakpoints={[{ maxWidth: 'sm', cols: 1 }]}>
+                <SimpleGrid cols={{ base: 1, sm: 2, md: 3, lg: 4 }} spacing="lg" >
                   {filteredMovies.map((movie) => (
                     <Link key={movie.id} href={`/movie/${movie.id}`}>
-                      <Card shadow="sm" padding="lg" radius="md" withBorder>
-                        <Card.Section>
-                          <Image src={movie.poster} height={323} alt={movie.title} fit="cover" />
+                      <Card padding="lg" radius="md" className={style.movieCardWrapper}>
+                        <Card.Section className={style.movieCard}>
+                          <BackgroundImage src={movie.poster} fit="cover">
+                            <div className={style.movieCard}>
+                              <div className={style.movieCardInfoWrapper}>
+                                <Text className={style.title}>{movie.title}</Text>
+
+                                <div className={style.ratingAndYear}>
+                                  <div className={style.alignVertically}>
+                                    <Text size="sm" color="dimmed">{movie.rating ?? "-"}</Text> 
+                                    <IconStarFilled size={16}/>
+                                  </div>
+                                  <Text size="sm" color="dimmed">{movie.year}</Text>
+                                </div>
+
+                                <div className={style.chipWrapper}>
+                                   {movie.genre.map((genre) => (
+                                    <Chip size="xxs" key={genre} checked={true} variant='filled'><span className={style.chip}>{genre}</span></Chip>
+                                  ))}
+                                </div>
+                              </div>
+                            </div>
+                          </BackgroundImage>
                         </Card.Section>
-                        <Text weight={500} size="lg" mt="md">{movie.title}</Text>
-                        <Text size="sm" color="dimmed">{movie.year} • {movie.genre.join(', ')}</Text>
                       </Card>
                     </Link>
                   ))}
@@ -249,7 +270,7 @@ export default function MovieList(props) {
             <Button mt="xl" onClick={loadMore}>Load More</Button>
         </Flex>
       </Flex>
-    </Container>
+    </>
   );
 }
 
