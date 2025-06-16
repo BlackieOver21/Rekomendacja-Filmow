@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
-
+from misc import func as fm
 from reco.fake_reco import reco
 from models import db, Watchlist, Movie
 
@@ -16,20 +16,17 @@ def get_watchlist():
     end = request.args.get('end', default=None, type=int)
 
     # Pobieramy filmy użytkownika
-    query = Watchlist.query.filter_by(user_id=user_id)
+    watchlisted_movie_ids = (
+        db.session.query(Watchlist.movie_id)
+        .filter_by(user_id=user_id)
+        .subquery()
+    )
 
-    # Jeśli jest zakres, to robimy slice
-    if end is not None:
-        query = query.slice(start, end)
-    else:
-        query = query.offset(start)
+    # Użyj Movie.query, ale ogranicz tylko do filmów z watchlisty
+    query = Movie.query.filter(Movie.id.in_(watchlisted_movie_ids)).order_by(Movie.id)
+    result = fm.query_movies(query, start, end)
 
-    results = query.all()
-
-    # Przekształcamy w JSON
-    watchlist = [{"id": w.user_id, "title": w.title} for w in results]
-
-    return jsonify(watchlist)
+    return jsonify(result)
 
 @profile_bp.route('/watchlist', methods=['POST'])
 @jwt_required()

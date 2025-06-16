@@ -39,7 +39,7 @@ def get_rating(movie_id):
     if not rating:
         return jsonify({"msg": "Rating not found"}), 404
     return jsonify({
-        "rating": {"user_id": rating.user_id, "movie_id": rating.movie_id, "value": rating.value, "comment": rating.comment}
+        "rating": {"user_id": rating.user_id, "movie_id": rating.movie_id, "rating": rating.value, "comment": rating.comment}
     }), 200
 
 @rating_bp.route('/ratings/<int:movie_id>', methods=['PUT'])

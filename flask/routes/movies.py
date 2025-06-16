@@ -2,7 +2,7 @@ from flask import Blueprint, request, jsonify, abort
 from flask_jwt_extended import JWTManager, jwt_required, get_jwt_identity
 from models import Movie, Rating, db
 import misc.func as fm
-from reco.fake_reco import reco
+from reco.reco import reco
 from time import sleep
 from sqlalchemy.sql.expression import func
 
@@ -20,22 +20,7 @@ def list_movies():
     end = request.args.get('end', default=None, type=int)
 
     query = Movie.query.order_by(Movie.id)
-    if end is not None:
-        query = query.slice(start, end)
-    else:
-        query = query.offset(start)
-    movies = query.all()
-
-    if end is not None and end - start < 50:
-        for mov in movies:
-            if not mov.image_url:
-                fm.update_movie_image(mov)
-                sleep(0.03)
-
-    result = []
-    for m in movies:
-        data = fm.serialize_movie(m)
-        result.append(data)
+    result = fm.query_movies(query, start, end)
 
     return jsonify(result)
 
@@ -54,13 +39,37 @@ def get_movie(movie_id):
 
     return jsonify(fm.serialize_movie(movie))
 
+@movie_bp.route('/movies/<int:movie_id>/ratings', methods=['GET'])
+def get_ratings(movie_id):
+    movie = Movie.query.get(movie_id)
+    
+    if movie is None:
+        abort(404, description="Movie not found")
+    movie
+
+    ratings = (
+    db.session.query(Rating)
+    .filter(Rating.movie_id == movie_id)
+    .all()
+    )
+    rating_list = [
+        {
+            "user_id": r.user_id,
+            "rating": r.value,
+            "comment": r.comment
+        }
+        for r in ratings
+    ]
+
+    return jsonify(rating_list)
+
 
 @movie_bp.route('/movies/random', methods=['GET'])
 def get_random_movie():
     random_movie = Movie.query.order_by(func.random()).first()
     if random_movie is None:
         abort(404, description="Movie database is empty!")
-
+    
     return jsonify(fm.serialize_movie(random_movie))
 
 
@@ -92,8 +101,6 @@ def get_watched_movies():
         results.append(movie_data)
 
     return jsonify(results), 200
-
-
 
 @movie_bp.route('/movies/recommended', methods=['GET'])
 @jwt_required()

@@ -1,8 +1,13 @@
 from flask import current_app
-from models import Movie, db
+from models import Movie, db, Genre, MovieGenre, Watchlist
 import requests
 from config import TMDB_API_KEY
 from time import sleep
+from sqlalchemy.sql.expression import func, not_
+from sqlalchemy import select
+from sqlalchemy.orm import joinedload
+import pandas as pd
+
 
 def fetch_movie_image(movie: Movie) -> str:
     """
@@ -94,10 +99,75 @@ def serialize_movie(movie):
     Helper to turn a Movie into JSON-friendly dict.
     """
     genres = [g.genre_items.desc for g in movie.genre_items if g.genre_items]
+   
     return {
         "id": movie.id,
         "title": movie.title,
         "year": movie.release_date.year if movie.release_date else None,
         "genre": genres,
         "poster": movie.image_url,
+        "rating": movie.vote_average
     }
+
+def query_movies(query, start=None, end=None):
+    if end is not None:
+        query = query.slice(start, end)
+    else:
+        query = query.offset(start)
+
+    movies = query.all()
+
+    # Uzupełnij brakujące obrazki (jak w list_movies)
+    if end is not None and end - start < 50:
+        for mov in movies:
+            if not mov.image_url:
+                update_movie_image(mov)
+                sleep(0.03)
+
+    # Serializacja
+    result = []
+    for m in movies:
+        data = serialize_movie(m)
+        result.append(data)
+
+    return 
+
+# def get_recommendations(user_id):
+
+#     watchlisted_movie_ids = (
+#         db.session.query(Watchlist.movie_id)
+#         .filter(Watchlist.user_id == user_id)
+#         .subquery()
+#     )
+
+#     # Krok 2: wybierz filmy NIEbędące na watchliście i dołącz gatunki
+#     movies = (
+#     db.session.query(Movie)
+#     .options(joinedload(Movie.genre_items).joinedload(MovieGenre.genre_items))
+#     .filter(not_(Movie.id.in_(watchlisted_movie_ids)))
+#     .order_by(func.random())  # <- losowe sortowanie
+#     .limit(50)
+#     .all()
+#     )
+
+#     # Krok 3: przetwórz wyniki do listy słowników
+#     result = []
+#     for movie in movies:
+#         genres = [mg.genre_items.desc for mg in movie.genre_items]
+#         result.append({
+#             "id": movie.id,
+#             "title": movie.title,
+#             "popularity": movie.popularity,
+#             "release_date": movie.release_date,
+#             "runtime": movie.runtime,
+#             "vote_average": movie.vote_average,
+#             "vote_count": movie.vote_count,
+#             "genres": genres
+#         })
+
+#     # Krok 4: konwersja do DataFrame
+#     result
+
+#     for row in result:
+        
+#     return 
