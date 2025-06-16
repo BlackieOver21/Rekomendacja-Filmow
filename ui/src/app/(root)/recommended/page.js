@@ -1,19 +1,14 @@
 'use client';
 
-import { defaultUser } from "@/storage/storage";
 import styles from "./recommended.module.css";
-import { useLocalStorage } from "@mantine/hooks";
 import { Button, Text, Title } from "@mantine/core";
 import Link from "next/link";
 import MovieList from "@/components/movieList/MovieList";
 import UserAuth from "@/app/utils/auth";
-import  { filterMovies }  from "@/app/utils/filter";
 import { useEffect, useState } from "react";
 
 export default function Recommended() {
   const auth = new UserAuth();
-  //const [user, setUser] = auth.getUser() || useLocalStorage(defaultUser);
-  //const [token, setToken] = auth.getToken();
   const [isLoggedIn, setIsLoggedIn] = useState(null);
 
   useEffect(() => {
@@ -30,7 +25,7 @@ export default function Recommended() {
 
   return (
     <>{isLoggedIn ?
-      <MovieList recommended={true} endpoint='movies'/>
+      <MovieList recommended={true} endpoint='movies/recommended'/>
       :
       <Ad/>
     }</>

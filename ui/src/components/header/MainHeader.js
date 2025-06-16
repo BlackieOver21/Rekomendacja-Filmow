@@ -111,7 +111,7 @@ function Navigation() {
   return (
     <Tabs variant="outline" value={activeTab} onChange={() => {/* this prevents hydration errors */}}>
       <Tabs.List className={styles.tabList}>
-        {recommendationTabs.includes(path) && <>
+        {recommendationTabs.some((tab) => path.startsWith(tab)) && <>
           <Tab link="/recommended" text="Recommended" activeTab={activeTab}/>
           <Tab link="/trending" text="Trending" activeTab={activeTab}/>
           <Link href='/movie/random'>
