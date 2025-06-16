@@ -6,13 +6,15 @@ export const FetchMethod = Object.freeze({
     PUT: Symbol("PUT"),
     DELETE: Symbol("DELETE"),
     PATCH: Symbol("PATCH"),
+    OPTIONS: Symbol("OPTIONS"),
 });
 
 export async function fetchFromAPI(
     uri,
-    body,
-    fetchMethod,
-    dataModificationFunction
+    fetchMethod = FetchMethod.GET,
+    headers = {},
+    body = undefined,
+    dataModificationFunction = (data) => data
 ) {
     try {
         const response = await fetch(
@@ -21,6 +23,7 @@ export async function fetchFromAPI(
                 method: fetchMethod.description,
                 headers: {
                     "Content-Type": "application/json",
+                    ...headers,
                 },
                 body: (body !== undefined) ? JSON.stringify(body) : undefined,
             }
@@ -29,6 +32,7 @@ export async function fetchFromAPI(
         if (response.ok) {
             const data = await response.json();
             const modifiedData = dataModificationFunction(data);
+            // console.log(modifiedData)
 
             return { success: true, data: modifiedData };
         }

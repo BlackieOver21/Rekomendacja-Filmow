@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import UserAuth from "@/app/utils/auth";
 import UserReview from "@/app/utils/review";
 import { NumberInput, Textarea, Button, Text, Rating } from '@mantine/core';
+import { fetchFromAPI } from '@/logic/utils';
 
 const MoviePage = () => {
   const [movieId, setMovieId] = useState(null);
@@ -30,23 +31,21 @@ const MoviePage = () => {
 
     const load = async () => {
       try {
-        const movieRes = await fetch(`http://127.0.0.1:5000/api/movies/${movieId}`);
-        if (movieRes.ok) {
-          const data = await movieRes.json();
-          setMovie(data);
+        const { success, data: movieRes } = await fetchFromAPI(`/movies/${movieId}`);
+
+        if (success) {
+          setMovie(movieRes);
         }
 
-        const reviewsData = await review.fetchMovieReviews(movieId, token);
-        setReviews(reviewsData.slice(0, 10));
+        // const reviewsData = await review.fetchMovieReviews(movieId, token);
+        // setReviews(reviewsData);
 
         if (user) {
-          const userReviewsData = await review.fetchUserReviews(user, token);
-          const existing = userReviewsData.find((r) => r.movie_id === parseInt(movieId));
-          if (existing) {
-            setMyReview(existing);
-            setReviewText(existing.text);
-            setReviewRating(existing.rating);
-          }
+          const userReviewsData = await review.fetchUserReviews(movieId, token);
+
+          setMyReview(userReviewsData.rating);
+          setReviewText(userReviewsData.rating.comment);
+          setReviewRating(userReviewsData.rating.value);
         }
       } catch (err) {
         console.error('Error loading movie page:', err);
@@ -56,7 +55,7 @@ const MoviePage = () => {
     };
 
     load();
-  }, [movieId]);
+  }, [movieId, token]);
 
   const submitReview = async () => {
     if (!user || !token) {
@@ -65,14 +64,24 @@ const MoviePage = () => {
     }
 
     try {
-      const updated = await review.submitReview({
-        userId: user,
-        movieId,
-        rating: reviewRating,
-        text: reviewText,
-        reviewId: myReview ? myReview.id : null,
-        token,
-      });
+      let updated;
+      if (myReview) {
+        updated = await review.updateReview({
+          movieId,
+          rating: reviewRating,
+          text: reviewText,
+          token,
+        });
+      }
+      else {
+        updated = await review.postReview({
+          movieId,
+          rating: reviewRating,
+          text: reviewText,
+          token,
+        });
+      }
+      
       setMyReview(updated);
       alert('Review saved!');
     } catch (err) {
@@ -145,10 +154,3 @@ const MoviePage = () => {
 };
 
 export default MoviePage;
-
-
-// export default function Movie() {
-//   return (
-//     <></>
-//   );
-// }
