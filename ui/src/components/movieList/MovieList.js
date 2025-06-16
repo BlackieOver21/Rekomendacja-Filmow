@@ -30,6 +30,7 @@ import UserAuth from '@/app/utils/auth';
 import Link from 'next/link';
 import style from "./movieList.module.css";
 import { IconStarFilled } from '@tabler/icons-react';
+import { fetchFromAPI, FetchMethod } from '@/logic/utils';
 
 const FilterSection = ({
   title,
@@ -135,21 +136,13 @@ export default function MovieList(props) {
 
   async function fetchMovies(startIndex) {
     try {
-      const recommendationProp = (props.recommended && user) ? '&user_id=' + user.id : '';
-      const headers = (props.endpoint !== 'movies') ? {
-        headers: { 
-            "Content-Type": "application/json", 
-            "Authorization": `Bearer ${auth.getToken()}` 
-        }
-      } : undefined;
-
-      const res = await fetch(
-        `http://localhost:5000/api/${props.endpoint}?start=${startIndex}&end=${startIndex + batchSize}${recommendationProp}`,
-        headers
+      const { success, data } = await fetchFromAPI(
+        `/${props.endpoint}?start=${startIndex}&end=${startIndex + batchSize}`,
+        FetchMethod.GET,
+        (props.endpoint !== 'movies') ? { "Authorization": `Bearer ${auth.getToken()}` } : {}
       );
       
-      if (!res.ok) throw new Error('Failed to fetch movies');
-      const data = await res.json();
+      if (!success) throw new Error('Failed to fetch movies');
 
       // Append new movies
       setMovies((prev) => {
