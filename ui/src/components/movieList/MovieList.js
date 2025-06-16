@@ -227,22 +227,6 @@ export default function MovieList(props) {
             </Flex>
           </Collapse>
         </Flex>
-
-        {/* <SimpleGrid cols={4} spacing="lg" breakpoints={[{ maxWidth: 'sm', cols: 1 }]}>
-          {filteredMovies.map((movie, index) => (
-            <a key={index} href={`/movie/${movie.id}`} style={{ cursor: 'pointer', textDecoration: 'none' }}>
-              <Card shadow="sm" padding="lg" radius="md" withBorder>
-                <Card.Section>
-                  <Image src={movie.poster} height={180} alt={movie.title} fit="cover" />
-                </Card.Section>
-                <Text weight={500} size="lg" mt="md">{movie.title}</Text>
-                <Text size="sm" color="dimmed">{movie.year} • {movie.genre.join(', ')}</Text>
-              </Card>
-            </a>
-          ))}
-        </SimpleGrid> */}
-
-
           <Flex direction="column" align="center" justify="center" gap="md" mb="xl">
             {filteredMovies.length === 0 ? (
             <Text>No movies match your filters.</Text>

@@ -1,0 +1,58 @@
+.titleCard {
+    display: flex; 
+    flex-direction: row;
+    gap: 32px;
+    align-items: flex-end;
+}
+
+.poster {
+    width: 340px;
+}
+
+.details {
+    display: flex; 
+    flex-direction: column;
+    flex-grow: 1;
+}
+
+.title {
+    color: #CBCFDC;
+    font-family: Inter;
+    font-size: 48px;
+    font-style: normal;
+    font-weight: 700;
+    line-height: 50px;
+    letter-spacing: 0.2px;
+}
+
+.detailsRow {
+    display: flex; 
+    flex-direction: row;
+    gap: 32px;
+    padding-top: 16px;
+}
+
+.detailsCol {
+    display: flex; 
+    flex-direction: column;
+    gap: 16px;
+}
+
+.alignVertically {
+    display: flex; 
+    flex-direction: row;
+    gap: 8px;
+    align-items: center;
+
+}
+
+.synopsis {
+    color: #A6A7AB;
+    text-align: justify;
+
+    font-family: Inter;
+    font-size: var(--font-body-size-md, 14px);
+    font-style: normal;
+    font-weight: 400;
+    line-height: var(--font-body-line-heigth-md, 18px);
+}

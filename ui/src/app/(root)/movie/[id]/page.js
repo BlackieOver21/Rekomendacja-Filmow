@@ -2,8 +2,11 @@
 import React, { useEffect, useState } from 'react';
 import UserAuth from "@/app/utils/auth";
 import UserReview from "@/app/utils/review";
-import { NumberInput, Textarea, Button, Text, Rating } from '@mantine/core';
+import { NumberInput, Textarea, Button, Text, Rating, Image, Card, Divider, Chip, Group } from '@mantine/core';
 import { fetchFromAPI } from '@/logic/utils';
+import style from './movie.module.css';
+import { IconStarFilled } from '@tabler/icons-react';
+import { IconStar } from '@tabler/icons-react';
 
 const MoviePage = () => {
   const [movieId, setMovieId] = useState(null);
@@ -94,39 +97,54 @@ const MoviePage = () => {
   if (!movie) return <Text>Movie not found.</Text>;
 
   return (<div style={{ padding: '20px', maxWidth: '900px', margin: '0 auto' }}>
-  <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-start' }}>
-    <img
-      src={movie.poster}
-      alt={`${movie.title} poster`}
-      style={{ width: '250px', height: '375px', objectFit: 'cover', borderRadius: '8px', boxShadow: '0 4px 8px rgba(0,0,0,0.2)' }}
-    />
-    <div>
-      <h1>{movie.title}</h1>
-      <p><strong>Year:</strong> {movie.year}</p>
-      <p><strong>Genres:</strong> {movie.genre.join(', ')}</p>
+  <div className={style.titleCard}>
+    <Card shadow="0" padding="0" radius="lg" className={style.poster}>
+      <Image src={movie.poster} height={512} alt={movie.title} fit="cover" />
+    </Card>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <strong>Rating:</strong>
-        <Rating value={movie.rating} readOnly fractions={2} />
-        <span>{movie.rating}</span>
+    <div className={style.details}>
+      <h1 className={style.title}>{movie.title}</h1>
+      <Divider mb={8}/>
+
+      <div className={style.detailsRow}>
+        <div className={style.detailsCol}>
+          <span>Rating:</span>
+          <span>Release year:</span>
+          <span>Director:</span>
+        </div>
+        <div className={style.detailsCol}>
+          <div className={style.alignVertically}>
+            <span>{movie.rating ?? "-"}</span> 
+            <IconStarFilled/>
+          </div>
+          <span>{movie.year ?? "-"}</span>
+          <span>{movie.director ?? "-"}</span>
+        </div>
       </div>
 
-      {movie.description && <p style={{ marginTop: '0.5rem' }}>{movie.description}</p>}
+      <Group mt="md" wrap="wrap">
+        {movie.genre.map((genre) => (
+          <Chip size="sm" key={genre} checked={true} variant='filled' >{genre}</Chip>
+        ))}
+      </Group>
     </div>
   </div>
+  <Divider mt={32} mb={32}/>
+      {movie.description && <span className={style.synopsis}>{movie.description}</span>}
 
        <h2 style={{ marginTop: '2rem' }}>Your Review</h2>
        {user ? (
         <>
-          <NumberInput
-            label="Rating"
+          <Rating 
             value={reviewRating}
             onChange={setReviewRating}
-            min={1}
-            max={5}
+            fractions={1}
+            emptySymbol={<IconStar/>} 
+            fullSymbol={<IconStarFilled />}
           />
           <Textarea
-            label="Review"
+            pt={8}
+            placeholder='Your thoughts'
             value={reviewText}
             onChange={(e) => setReviewText(e.currentTarget.value)}
           />

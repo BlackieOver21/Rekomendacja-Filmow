@@ -1,8 +1,8 @@
 import { Inter, Jost } from "next/font/google";
 // import { ColorSchemeScript } from '@mantine/core';
-import "./globals.css";
 import '@mantine/core/styles.css';
 import '@mantine/dates/styles.css';
+import "./globals.css";
 import Providers from "./providers";
 import MainHeader from "@/components/header/MainHeader";
 import { Grid, GridCol } from "@mantine/core";
