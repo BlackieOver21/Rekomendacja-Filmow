@@ -1,6 +1,6 @@
-import { fetchFromAPI, FetchMethod } from "@/logic/utils";
+import { fetchFromAPI, FetchMethod } from "@/utils/utils";
 
-class UserAuth {
+export default class UserAuth {
     constructor(storageKey = 'user', tokenKey = 'token') {
         this.storageKey = storageKey;
         this.tokenKey = tokenKey;
@@ -107,6 +107,5 @@ class UserAuth {
             localStorage.removeItem(this.tokenKey);
         }
     }
-  }
+}
   
-export default UserAuth;

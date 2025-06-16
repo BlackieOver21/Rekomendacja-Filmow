@@ -3,8 +3,7 @@
 import { Button, Container, Paper, PasswordInput, TextInput, Title } from "@mantine/core";
 import styles from "./register.module.css";
 import { useState } from "react";
-import UserAuth from "@/app/utils/auth";
-import { redirect } from "next/navigation";
+import UserAuth from "@/utils/auth";
 import { useRouter } from 'next/navigation';
 
 export default function Register() {

@@ -1,5 +1,4 @@
 import { Inter, Jost } from "next/font/google";
-// import { ColorSchemeScript } from '@mantine/core';
 import '@mantine/core/styles.css';
 import '@mantine/dates/styles.css';
 import "./globals.css";
@@ -10,8 +9,6 @@ import { Grid, GridCol } from "@mantine/core";
 const inter = Inter({ 
   variable: "--font-inter",
   subsets: ["latin"],
-  // display: "swap",
-  // adjustFontFallback: false,
 });
 
 const jost = Jost({ 

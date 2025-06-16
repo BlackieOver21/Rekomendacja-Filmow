@@ -1,4 +1,4 @@
-import { fetchFromAPI } from '@/logic/utils';
+import { fetchFromAPI } from '@/utils/utils';
 import { redirect } from 'next/navigation';
 
 export async function GET() {

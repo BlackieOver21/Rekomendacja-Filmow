@@ -1,10 +1,3 @@
-:root {
-  --chip-icon-size-xs: 0px !important;
-  --chip-icon-size-sm: 0px !important;
-  --chip-icon-size-md: 0px !important;
-  --chip-icon-size: 0px !important;
-}
-
 html, body {
   max-width: 100vw;
   overflow-x: hidden;

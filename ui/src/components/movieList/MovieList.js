@@ -1,7 +1,7 @@
 //'use client';
 
-import { useState, useEffect } from 'react';
-import { filterMovies } from '@/app/utils/filter';
+import { useState, useEffect, useCallback } from 'react';
+import { filterMovies } from '@/utils/filter';
 import {
   SimpleGrid,
   Card,
@@ -22,32 +22,209 @@ import {
 import { IconSearch, IconChevronDown, IconChevronUp } from '@tabler/icons-react';
 import { useLocalStorage } from '@mantine/hooks';
 import { defaultUser } from '@/storage/storage';
-import UserAuth from '@/app/utils/auth';
+import UserAuth from '@/utils/auth';
 import Link from 'next/link';
 import style from "./movieList.module.css";
 import { IconStarFilled } from '@tabler/icons-react';
-import { fetchFromAPI, FetchMethod } from '@/logic/utils';
+import { fetchFromAPI, FetchMethod } from '@/utils/utils';
 import { IconX } from '@tabler/icons-react';
 import { IconCheck } from '@tabler/icons-react';
 
-const FilterSection = ({
+export default function MovieList(props) {
+  const [movies, setMovies] = useState([]);
+  const [filteredMovies, setFilteredMovies] = useState([]);
+  const [user, setUser] = useLocalStorage(defaultUser);
+  const batchSize = 12;
+
+  const [start, setStart] = useState(0);
+  const auth = new UserAuth();
+
+  const fetchMovies = useCallback(async (startIndex) => {
+    try {
+      const { success, data } = await fetchFromAPI(
+        `/${props.endpoint}?start=${startIndex}&end=${startIndex + batchSize}`,
+        FetchMethod.GET,
+        (props.endpoint !== 'movies') ? { "Authorization": `Bearer ${auth.getToken()}` } : {}
+      );
+      
+      if (!success) throw new Error('Failed to fetch movies');
+
+      // Append new movies
+      setMovies((prev) => {
+        // Avoid duplicates in case API returns overlapping data
+        const newMovies = data.filter(m => !prev.some(pm => pm.id === m.id));
+        return [...prev, ...newMovies];
+      });
+
+      // Update start only after successful fetch
+      setStart(startIndex + batchSize);
+    } 
+    catch (error) {
+      console.error(error);
+    }
+  }, [user, props, batchSize, auth, setMovies, setStart]);
+
+  // Fetch first batch only once on mount
+  useEffect(() => {
+    fetchMovies(0);
+  }, []);
+
+  const loadMore = useCallback(() => {
+    fetchMovies(start);
+  }, [fetchMovies, start]);
+
+  return (
+    <Flex direction="column" justify="center" align="center" h="100%" gap="sm" >
+      <FiltersAndSearch 
+        setFilteredMovies={setFilteredMovies}
+        movies={movies}
+      />
+
+      <Flex direction="column" align="center" justify="center" gap="md" mb="xl" mt="md">
+        {filteredMovies.length === 0 ? (
+          <Text>No movies match your filters.</Text>
+        ) : (
+          <SimpleGrid cols={{ base: 1, sm: 2, md: 3, lg: 4 }} spacing="lg" >
+            {filteredMovies.map((movie) => (
+              <MoviePoster movie={movie} key={movie.id}/>
+            ))}
+          </SimpleGrid>
+        )}
+
+        <Button mt="xl" onClick={loadMore}>Load More</Button>
+      </Flex>
+    </Flex>
+  );
+}
+
+function FiltersAndSearch({ setFilteredMovies, movies }) {
+  const [opened, setOpened] = useState(false);
+  const [filters, setFilters] = useState({
+    search: '',
+    ratingFromInclusive: null,
+    ratingToInclusive: null,
+    yearFromInclusive: null,
+    yearToInclusive: null,
+    genresInclusive: [],
+    ratingFromExclusive: null,
+    ratingToExclusive: null,
+    yearFromExclusive: null,
+    yearToExclusive: null,
+    genresExclusive: [],
+  });
+
+  // Apply filters whenever movies or filters change
+  useEffect(() => {
+    const filtered = filterMovies(movies, filters);
+    setFilteredMovies(filtered);
+  }, [movies, filters, setFilteredMovies]);
+
+  return (
+    <>
+      <TextInput
+        value={filters.search}
+        onChange={(event) => {
+          const value = event?.currentTarget?.value ?? '';
+          setFilters(prev => ({ ...prev, search: value }));
+        }}
+        placeholder="Search titles"
+        w="55%"
+        size="sm"
+        mt={48}
+        mb={8}
+        leftSection={<IconSearch size={18} color="#71787f" />}
+      />
+
+      <Flex direction="column" justify="center" align="center" h="100%" w="100%">
+        <Button
+          variant="light"
+          color="#71787f"
+          style={{ backgroundColor: 'transparent', border: 'none' }}
+          onClick={() => setOpened(o => !o)}
+          mb="sm"
+          mx="auto"
+        >
+          <Flex gap={4} align='center'><Text pt={4}>Filters</Text> 
+            <>{opened ? <IconChevronUp size={16}/> : <IconChevronDown size={16} />}</>
+          </Flex>
+        </Button>
+
+        <Collapse w="100%" in={opened}>
+          <Divider/>
+          <Flex w="100%" gap="0" justify="center">
+            <FilterSection
+              title="Include"
+              filters={filters}
+              setFilters={setFilters}
+              prefix="Inclusive"
+            />
+            <Divider orientation='vertical' mr={16} ml={16}/>
+            <FilterSection
+              title="Exclude"
+              filters={filters}
+              setFilters={setFilters}
+              prefix="Exclusive"
+            />
+          </Flex>
+          <Divider/>
+        </Collapse>
+      </Flex>
+    </>
+  );
+}
+
+function MoviePoster({ movie }) {
+  return (
+    <Link href={`/movie/${movie.id}`}>
+      <Card padding="lg" radius="md" className={style.movieCardWrapper}>
+        <Card.Section className={style.movieCard}>
+          <BackgroundImage src={movie.poster} fit="cover">
+            <div className={style.movieCard}>
+              <div className={style.movieCardInfoWrapper}>
+
+                <Text className={style.title}>{movie.title}</Text>
+
+                <div className={style.ratingAndYear}>
+                  <div className={style.alignVertically}>
+                    <Text size="sm" color="dimmed">{movie.rating ?? "-"}</Text> 
+                    <IconStarFilled size={16}/>
+                  </div>
+                  <Text size="sm" color="dimmed">{movie.year}</Text>
+                </div>
+
+                <div className={style.chipWrapper}>
+                  {movie.genre.map((genre) => (
+                    <Chip size="xxs" key={genre} checked={true} variant='filled'><span className={style.chip}>{genre}</span></Chip>
+                  ))}
+                </div>
+
+              </div>
+            </div>
+          </BackgroundImage>
+        </Card.Section>
+      </Card>
+    </Link>
+  );
+}
+
+function FilterSection({
   title,
   filters,
   setFilters,
   prefix, // to distinguish inclusive/exclusive keys, e.g. 'Inclusive' or 'Exclusive'
-}) => {
+}) {
   const genresKey = `genres${prefix}`;
   const ratingFromKey = `ratingFrom${prefix}`;
   const ratingToKey = `ratingTo${prefix}`;
   const yearFromKey = `yearFrom${prefix}`;
   const yearToKey = `yearTo${prefix}`;
 
-  const handleNumberChange = (key, value) => {
+  const handleNumberChange = useCallback((key, value) => {
     setFilters((prev) => ({
       ...prev,
       [key]: value === '' ? null : value,
     }));
-  };
+  }, [setFilters]);
 
   return (
     <Box w="50%" mt={12} mb={16}>
@@ -111,166 +288,3 @@ const FilterSection = ({
     </Box>
   );
 };
-
-export default function MovieList(props) {
-  const [movies, setMovies] = useState([]);
-  const [filteredMovies, setFilteredMovies] = useState([]);
-  const [filters, setFilters] = useState({
-    search: '',
-    ratingFromInclusive: null,
-    ratingToInclusive: null,
-    yearFromInclusive: null,
-    yearToInclusive: null,
-    genresInclusive: [],
-    ratingFromExclusive: null,
-    ratingToExclusive: null,
-    yearFromExclusive: null,
-    yearToExclusive: null,
-    genresExclusive: [],
-    recommended: props.recommended,
-  });
-  const [opened, setOpened] = useState(false);
-  const [user, setUser] = useLocalStorage(defaultUser);
-  const batchSize = 12;
-
-  const [start, setStart] = useState(0);
-  const auth = new UserAuth();
-
-  async function fetchMovies(startIndex) {
-    try {
-      const { success, data } = await fetchFromAPI(
-        `/${props.endpoint}?start=${startIndex}&end=${startIndex + batchSize}`,
-        FetchMethod.GET,
-        (props.endpoint !== 'movies') ? { "Authorization": `Bearer ${auth.getToken()}` } : {}
-      );
-      
-      if (!success) throw new Error('Failed to fetch movies');
-
-      // Append new movies
-      setMovies((prev) => {
-        // Avoid duplicates in case API returns overlapping data
-        const newMovies = data.filter(m => !prev.some(pm => pm.id === m.id));
-        return [...prev, ...newMovies];
-      });
-
-      // Update start only after successful fetch
-      setStart(startIndex + batchSize);
-
-    } catch (error) {
-      console.error(error);
-    }
-  }
-
-  // Fetch first batch only once on mount
-  useEffect(() => {
-    fetchMovies(0);
-  }, [user, props, batchSize]);
-
-  // Apply filters whenever movies or filters change
-  useEffect(() => {
-    // console.log('Movies:', movies);
-    // console.log('Filters:', filters);
-    const filtered = filterMovies(movies, filters);
-    // console.log('Filtered:', filtered);
-    setFilteredMovies(filtered);
-  }, [movies, filters]);
-
-  const loadMore = () => {
-    fetchMovies(start);
-  };
-
-  return (
-    <>
-      <Flex direction="column" justify="center" align="center" h="100%" gap="sm" >
-        <TextInput
-          value={filters.search}
-          onChange={(event) => {
-            const value = event?.currentTarget?.value ?? '';
-            setFilters(prev => ({ ...prev, search: value }));
-          }}
-          placeholder="Search titles"
-          w="55%"
-          size="sm"
-          mt={48}
-          mb={8}
-          leftSection={<IconSearch size={18} color="#71787f" />}
-        />
-
-        <Flex direction="column" justify="center" align="center" h="100%" w="100%">
-          <Button
-            variant="light"
-            color="#71787f"
-            style={{ backgroundColor: 'transparent', border: 'none' }}
-            onClick={() => setOpened(o => !o)}
-            mb="sm"
-            mx="auto"
-          >
-            <Flex gap={4} align='center'><Text pt={4}>Filters</Text> 
-              <>{opened ? <IconChevronUp size={16}/> : <IconChevronDown size={16} />}</>
-            </Flex>
-          </Button>
-
-          <Collapse w="100%" in={opened}>
-          <Divider/>
-            <Flex w="100%" gap="0" justify="center">
-              <FilterSection
-                title="Include"
-                filters={filters}
-                setFilters={setFilters}
-                prefix="Inclusive"
-              />
-              <Divider orientation='vertical' mr={16} ml={16}/>
-              <FilterSection
-                title="Exclude"
-                filters={filters}
-                setFilters={setFilters}
-                prefix="Exclusive"
-              />
-            </Flex>
-          <Divider/>
-          </Collapse>
-        </Flex>
-        <Flex direction="column" align="center" justify="center" gap="md" mb="xl" mt="md">
-          {filteredMovies.length === 0 ? (
-            <Text>No movies match your filters.</Text>
-          ) : (
-                <SimpleGrid cols={{ base: 1, sm: 2, md: 3, lg: 4 }} spacing="lg" >
-                  {filteredMovies.map((movie) => (
-                    <Link key={movie.id} href={`/movie/${movie.id}`}>
-                      <Card padding="lg" radius="md" className={style.movieCardWrapper}>
-                        <Card.Section className={style.movieCard}>
-                          <BackgroundImage src={movie.poster} fit="cover">
-                            <div className={style.movieCard}>
-                              <div className={style.movieCardInfoWrapper}>
-                                <Text className={style.title}>{movie.title}</Text>
-
-                                <div className={style.ratingAndYear}>
-                                  <div className={style.alignVertically}>
-                                    <Text size="sm" color="dimmed">{movie.rating ?? "-"}</Text> 
-                                    <IconStarFilled size={16}/>
-                                  </div>
-                                  <Text size="sm" color="dimmed">{movie.year}</Text>
-                                </div>
-
-                                <div className={style.chipWrapper}>
-                                   {movie.genre.map((genre) => (
-                                    <Chip size="xxs" key={genre} checked={true} variant='filled'><span className={style.chip}>{genre}</span></Chip>
-                                  ))}
-                                </div>
-                              </div>
-                            </div>
-                          </BackgroundImage>
-                        </Card.Section>
-                      </Card>
-                    </Link>
-                  ))}
-                </SimpleGrid>
-              )}
-
-            <Button mt="xl" onClick={loadMore}>Load More</Button>
-        </Flex>
-      </Flex>
-    </>
-  );
-}
-

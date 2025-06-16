@@ -1,4 +1,4 @@
-import { fetchFromAPI, FetchMethod } from "@/logic/utils";
+import { fetchFromAPI, FetchMethod } from "@/utils/utils";
 
 export default class UserReview {
     constructor() {}

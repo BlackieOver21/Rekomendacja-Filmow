@@ -3,15 +3,16 @@
 import { Button, Container, Paper, PasswordInput, TextInput, Title } from "@mantine/core";
 import styles from "./login.module.css";
 import { useCallback, useState } from 'react';
-import { redirect } from "next/navigation";
-import UserAuth from "@/app/utils/auth";
+import UserAuth from "@/utils/auth";
 import { useLocalStorage } from "@mantine/hooks";
 import { defaultUser } from "@/storage/storage";
+import { useRouter } from "next/navigation";
 
 export default function Login() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loggedInUser, setLoggedInUser] = useLocalStorage(defaultUser);
+  const router = useRouter();
 
   const handleLogin = useCallback(() => {
     async function login() {
@@ -27,7 +28,7 @@ export default function Login() {
         console.error("Login failed:", error.message);
         path = '/login';
       } finally {
-        redirect(path);
+        router.push(path);
         // Optionally, you can clear the input fields after login attempt
       }
     }

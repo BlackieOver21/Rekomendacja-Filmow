@@ -1,18 +1,18 @@
 'use client';
 
-import { redirect, usePathname } from "next/navigation";
+import { usePathname } from "next/navigation";
 import styles from "./mainHeader.module.css";
 import { Button, Grid, Menu, Tabs } from "@mantine/core";
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useLocalStorage } from "@mantine/hooks";
-import { } from "@tabler/icons-react";
 import { IconChevronDown } from "@tabler/icons-react";
 import { IconPlayerPlay } from "@tabler/icons-react";
 import { IconSettings } from "@tabler/icons-react";
 import { IconLogout } from "@tabler/icons-react";
 import { defaultUser } from "@/storage/storage";
-import UserAuth from "@/app/utils/auth";
+import UserAuth from "@/utils/auth";
+import { useRouter } from "next/navigation";
 
 
 const loginButtonBlacklist = ["/login"];
@@ -32,7 +32,7 @@ export default function MainHeader() {
           </Link>
           <LoginButtons/>
         </div>
-        <Navigation/>
+        <TabNavigation/>
       </Grid.Col>
       <Grid.Col span={{ base: 0, sm: 1, md: 1, lg: 1 }} className={styles.gridPadding}/>
     </Grid>
@@ -42,12 +42,13 @@ export default function MainHeader() {
 function LoginButtons() {
   const path = usePathname();
   const [user, setUser] = useLocalStorage(defaultUser);
+  const router = useRouter();
   
   const handleLogout = useCallback(() => {
     const auth = new UserAuth();
     auth.logout();
     setUser(null);
-    redirect("/recommended");
+    router.push("/recommended");
   });
 
   return (
@@ -100,7 +101,7 @@ function LoginButtons() {
   );
 }
 
-function Navigation() {
+function TabNavigation() {
   const path = usePathname();
   const [activeTab, setActiveTab] = useState(path);
 

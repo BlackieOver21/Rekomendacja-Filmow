@@ -4,7 +4,7 @@ import styles from "./recommended.module.css";
 import { Button, Text, Title } from "@mantine/core";
 import Link from "next/link";
 import MovieList from "@/components/movieList/MovieList";
-import UserAuth from "@/app/utils/auth";
+import UserAuth from "@/utils/auth";
 import { useEffect, useState } from "react";
 
 export default function Recommended() {
@@ -25,7 +25,7 @@ export default function Recommended() {
 
   return (
     <>{isLoggedIn ?
-      <MovieList recommended={true} endpoint='movies/recommended'/>
+      <MovieList endpoint='movies/recommended'/>
       :
       <Ad/>
     }</>
