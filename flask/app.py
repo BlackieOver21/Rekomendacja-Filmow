@@ -10,12 +10,14 @@ from routes.auth import auth_bp
 from routes.profile import profile_bp
 from routes.movies import movie_bp
 from routes.rating import rating_bp
+from flask_cors import CORS
 
 from models import db, User
 
 # Config
 app = Flask(__name__)
 app.config.from_pyfile('config.py')
+CORS(app, supports_credentials=True)
 
 # Database
 db.init_app(app)
