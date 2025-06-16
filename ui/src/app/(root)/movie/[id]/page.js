@@ -1,9 +1,9 @@
 'use client';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import UserAuth from "@/app/utils/auth";
 import UserReview from "@/app/utils/review";
 import { Textarea, Button, Text, Rating, Image, Card, Divider, Chip, Group } from '@mantine/core';
-import { fetchFromAPI } from '@/logic/utils';
+import { fetchFromAPI, FetchMethod } from '@/logic/utils';
 import style from './movie.module.css';
 import { IconStarFilled } from '@tabler/icons-react';
 
@@ -35,11 +35,18 @@ const MoviePage = () => {
     const load = async () => {
       try {
         const { success, data: movieRes } = await fetchFromAPI(`/movies/${movieId}`);
-
         if (success) {
           setMovie(movieRes);
         }
+      } catch (err) {
+        console.error('Error loading movie page:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
 
+    async function loadRating() {
+      try {
         // const reviewsData = await review.fetchMovieReviews(movieId, token);
         // setReviews(reviewsData);
 
@@ -51,13 +58,30 @@ const MoviePage = () => {
           setReviewRating(userReviewsData.rating.value);
         }
       } catch (err) {
-        console.error('Error loading movie page:', err);
-      } finally {
-        setLoading(false);
+        console.error('Error loading ratings:', err);
+      }
+    };
+
+    async function loadWatchlist() {
+      try {
+        if (user) {
+          const { success, data } = await fetchFromAPI(
+            `/watchlist`, 
+            FetchMethod.GET,
+            { "Authorization": `Bearer ${token}` },
+          );
+          if (success) {
+            setIsOnWatchlist(data.some((movie) => movie.id === movieId));
+          }
+        }
+      } catch (err) {
+        console.error('Error loading watchlist:', err);
       }
     };
 
     load();
+    loadRating();
+    loadWatchlist();
   }, [movieId, token]);
 
   const submitReview = async () => {
@@ -92,6 +116,47 @@ const MoviePage = () => {
       console.error(err);
     }
   };
+
+  const addToWatchlist = useCallback(async () => {
+    try {
+      if (user) {
+        const { success, data } = await fetchFromAPI(
+          `/watchlist`, 
+          FetchMethod.POST,
+          { "Authorization": `Bearer ${token}` },
+          { movie_id: movieId }
+        );
+
+        if (success) {
+          setIsOnWatchlist(true);
+          alert('Added to watchlist!');
+        }
+      }
+    } catch (err) {
+      alert('Error adding to watchlist.');
+      console.error(err);
+    }
+  }, [user, movieId, token]);
+
+  const removeFromWatchlist = useCallback(async () => {
+    try {
+      if (user) {
+        const { success, data } = await fetchFromAPI(
+          `/watchlist/${movieId}`, 
+          FetchMethod.DELETE,
+          { "Authorization": `Bearer ${token}` },
+        );
+        
+        if (success) {
+          setIsOnWatchlist(false);
+          alert('Removed from watchlist!');
+        }
+      }
+    } catch (err) {
+      alert('Error removing from watchlist.');
+      console.error(err);
+    }
+  }, [user, movieId, token]);
 
   if (loading) return <Text>Loading...</Text>;
   if (!movie) return <Text>Movie not found.</Text>;
@@ -176,7 +241,7 @@ const MoviePage = () => {
               <Button 
                 variant='outline' 
                 color='paleBlue.3'
-                onClick={() => {}}
+                onClick={removeFromWatchlist}
                 mt="sm"
               >
                 Remove from Watchlist
@@ -185,7 +250,7 @@ const MoviePage = () => {
               <Button 
                 variant='outline' 
                 color='paleBlue.3'
-                onClick={() => {}}
+                onClick={addToWatchlist}
                 mt="sm"
               >
                 Add to Watchlist
