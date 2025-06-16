@@ -2,11 +2,10 @@
 import React, { useEffect, useState } from 'react';
 import UserAuth from "@/app/utils/auth";
 import UserReview from "@/app/utils/review";
-import { NumberInput, Textarea, Button, Text, Rating, Image, Card, Divider, Chip, Group } from '@mantine/core';
+import { Textarea, Button, Text, Rating, Image, Card, Divider, Chip, Group } from '@mantine/core';
 import { fetchFromAPI } from '@/logic/utils';
 import style from './movie.module.css';
 import { IconStarFilled } from '@tabler/icons-react';
-import { IconStar } from '@tabler/icons-react';
 
 const MoviePage = () => {
   const [movieId, setMovieId] = useState(null);
@@ -16,6 +15,7 @@ const MoviePage = () => {
   const [reviewText, setReviewText] = useState('');
   const [reviewRating, setReviewRating] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [isOnWatchlist, setIsOnWatchlist] = useState(false);
 
   const auth = new UserAuth();
   const user = auth.getUser();
@@ -129,32 +129,74 @@ const MoviePage = () => {
       </Group>
     </div>
   </div>
-  <Divider mt={32} mb={32}/>
-      {movie.description && <span className={style.synopsis}>{movie.description}</span>}
-
-       <h2 style={{ marginTop: '2rem' }}>Your Review</h2>
-       {user ? (
+      {movie.description && 
         <>
-          <Rating 
-            value={reviewRating}
-            onChange={setReviewRating}
-            fractions={1}
-            emptySymbol={<IconStar/>} 
-            fullSymbol={<IconStarFilled />}
-          />
+          <Divider mt={32} mb={32}/>
+          <span className={style.synopsis}>
+            {movie.description}
+          </span>
+        </>
+      }
+
+      <Card 
+        radius={0} 
+        withBorder 
+        pt={24}
+        pb={24}
+        pl={36}
+        pr={36}
+        mt={24}
+      >
+       {user ? (
+        <div>
+          <div className={style.ratingWrapper}>
+            <span>My rating:</span>
+            <Rating 
+              value={reviewRating}
+              onChange={setReviewRating}
+              fractions={1}
+              size='lg'
+              // emptySymbol={<IconStar/>} 
+              // fullSymbol={<IconStarFilled />}
+            />
+          </div>
+
           <Textarea
             pt={8}
             placeholder='Your thoughts'
             value={reviewText}
             onChange={(e) => setReviewText(e.currentTarget.value)}
           />
-          <Button onClick={submitReview} mt="sm">
-            {myReview ? 'Update Review' : 'Submit Review'}
-          </Button>
-        </>
+
+          <div className={style.buttonWrapper}>
+            <Button onClick={submitReview} mt="sm">
+              {myReview ? 'Update Review' : 'Submit Review'}
+            </Button>
+            {isOnWatchlist ? 
+              <Button 
+                variant='outline' 
+                color='paleBlue.3'
+                onClick={() => {}}
+                mt="sm"
+              >
+                Remove from Watchlist
+              </Button>
+              :
+              <Button 
+                variant='outline' 
+                color='paleBlue.3'
+                onClick={() => {}}
+                mt="sm"
+              >
+                Add to Watchlist
+              </Button>
+            }
+          </div>
+        </div>
       ) : (
-        <p>You must be logged in to leave a review.</p>
+        <span>You must be logged in to leave a review.</span>
       )}
+      </Card>
 
       <h2 style={{ marginTop: '2rem' }}>Recent Reviews</h2>
       {reviews.length === 0 ? (

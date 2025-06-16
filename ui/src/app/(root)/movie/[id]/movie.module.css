@@ -47,6 +47,7 @@
 }
 
 .synopsis {
+    padding-top: 24px;
     color: #A6A7AB;
     text-align: justify;
 
@@ -55,4 +56,19 @@
     font-style: normal;
     font-weight: 400;
     line-height: var(--font-body-line-heigth-md, 18px);
+}
+
+.ratingWrapper {
+    display: flex; 
+    flex-direction: row;
+    gap: 16px;
+    align-items: flex-end;
+}
+
+.buttonWrapper {
+    display: flex; 
+    flex-direction: row;
+    gap: 16px;
+    justify-content: space-between;
+    
 }

@@ -122,7 +122,7 @@ function Navigation() {
         </>}
         {path.startsWith("/profile") && <>
           <Tab link="/profile/watchlist" text="Watchlist" activeTab={activeTab}/>
-          <Tab link="/profile/watched" text="Watched" activeTab={activeTab}/>
+          <Tab link="/profile/watched" text="Rated" activeTab={activeTab}/>
           <Tab link="/profile/settings" text="Settings" activeTab={activeTab}/>
         </>}
       </Tabs.List>
