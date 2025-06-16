@@ -5,9 +5,7 @@ import { filterMovies } from '@/app/utils/filter';
 import {
   SimpleGrid,
   Card,
-  Image,
   Text,
-  Container,
   TextInput,
   Collapse,
   Button,
@@ -18,12 +16,10 @@ import {
   Chip,
   Group,
   Stack,
-  Rating,
-  List,
-  PasswordInput,
   BackgroundImage,
+  Divider,
 } from '@mantine/core';
-import { IconSearch, IconChevronDown, IconChevronUp, IconGalaxy } from '@tabler/icons-react';
+import { IconSearch, IconChevronDown, IconChevronUp } from '@tabler/icons-react';
 import { useLocalStorage } from '@mantine/hooks';
 import { defaultUser } from '@/storage/storage';
 import UserAuth from '@/app/utils/auth';
@@ -31,6 +27,8 @@ import Link from 'next/link';
 import style from "./movieList.module.css";
 import { IconStarFilled } from '@tabler/icons-react';
 import { fetchFromAPI, FetchMethod } from '@/logic/utils';
+import { IconX } from '@tabler/icons-react';
+import { IconCheck } from '@tabler/icons-react';
 
 const FilterSection = ({
   title,
@@ -52,44 +50,48 @@ const FilterSection = ({
   };
 
   return (
-  
-    <Box w="50%">
+    <Box w="50%" mt={12} mb={16}>
       <Title align="center" order={3}>{title}</Title>
       <Stack mt="md" spacing="sm" align="center">
         <Flex gap="xs" justify="flex-start" align="center" wrap="nowrap">
           <NumberInput
-            label="Rating from"
+            label="Rating"
             min={1}
             max={5}
+            placeholder='1'
             value={filters[ratingFromKey]}
             onChange={(val) => handleNumberChange(ratingFromKey, val)}
             hideControls
-            w={80}
+            w={45}
           />
-          <p>-</p>
+          <span style={{marginTop: 28}}>-</span>
           <NumberInput
-            label="Rating to"
+            label=" "
             min={1}
             max={5}
+            placeholder='5'
             value={filters[ratingToKey]}
             onChange={(val) => handleNumberChange(ratingToKey, val)}
             hideControls
-            w={80}
+            w={45}
           />
+          <Divider orientation='vertical' mr={16} ml={16}/>
           <NumberInput
-            label="Year from"
+            label="Year"
+            placeholder='1894'
             value={filters[yearFromKey]}
             onChange={(val) => handleNumberChange(yearFromKey, val)}
             hideControls
-            w={100}
+            w={60}
           />
-          <p>-</p>
+          <span style={{marginTop: 28}}>-</span>
           <NumberInput
-            label="Year to"
+            label=" "
+            placeholder='2025'
             value={filters[yearToKey]}
             onChange={(val) => handleNumberChange(yearToKey, val)}
             hideControls
-            w={100}
+            w={60}
           />
         </Flex>
 
@@ -99,9 +101,9 @@ const FilterSection = ({
           value={filters[genresKey] || []}
           onChange={(val) => setFilters(prev => ({ ...prev, [genresKey]: val }))}
         >
-          <Group justify="center" mt="md" wrap="wrap">
+          <Group justify="center" mt="md" wrap="wrap" gap={8}>
             {['Action', 'Adventure', 'Comedy', 'Drama', 'Fantasy', 'Noire', 'Thriller'].map((genre) => (
-              <Chip size="xs" key={genre} value={genre}>{genre}</Chip>
+              <Chip size="xs" key={genre} value={genre} icon={(prefix === "Exclusive") ? <IconX size={14}/> : <IconCheck size={14}/>}><span className={style.bigChip}>{genre}</span></Chip>
             ))}
           </Group>
         </Chip.Group>
@@ -179,7 +181,7 @@ export default function MovieList(props) {
 
   return (
     <>
-      <Flex direction="column" justify="center" align="center" h="100%" gap="sm">
+      <Flex direction="column" justify="center" align="center" h="100%" gap="sm" >
         <TextInput
           value={filters.search}
           onChange={(event) => {
@@ -189,8 +191,8 @@ export default function MovieList(props) {
           placeholder="Search titles"
           w="55%"
           size="sm"
-          mt="lg"
-          mb={16}
+          mt={48}
+          mb={8}
           leftSection={<IconSearch size={18} color="#71787f" />}
         />
 
@@ -203,28 +205,33 @@ export default function MovieList(props) {
             mb="sm"
             mx="auto"
           >
-            {opened ? <>Filters <IconChevronUp size={16} /></> : <>Filters <IconChevronDown size={16} /></>}
+            <Flex gap={4} align='center'><Text pt={4}>Filters</Text> 
+              <>{opened ? <IconChevronUp size={16}/> : <IconChevronDown size={16} />}</>
+            </Flex>
           </Button>
 
           <Collapse w="100%" in={opened}>
-                <Flex w="100%" gap="sm" justify="center">
+          <Divider/>
+            <Flex w="100%" gap="0" justify="center">
               <FilterSection
-                title="Include Filters"
+                title="Include"
                 filters={filters}
                 setFilters={setFilters}
                 prefix="Inclusive"
               />
+              <Divider orientation='vertical' mr={16} ml={16}/>
               <FilterSection
-                title="Exclude Filters"
+                title="Exclude"
                 filters={filters}
                 setFilters={setFilters}
                 prefix="Exclusive"
               />
             </Flex>
+          <Divider/>
           </Collapse>
         </Flex>
-          <Flex direction="column" align="center" justify="center" gap="md" mb="xl">
-            {filteredMovies.length === 0 ? (
+        <Flex direction="column" align="center" justify="center" gap="md" mb="xl" mt="md">
+          {filteredMovies.length === 0 ? (
             <Text>No movies match your filters.</Text>
           ) : (
                 <SimpleGrid cols={{ base: 1, sm: 2, md: 3, lg: 4 }} spacing="lg" >

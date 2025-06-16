@@ -94,6 +94,11 @@
     padding-left: 8px;
 }
 
+.bigChip {
+    font-size: 12px;
+    font-weight: 600;
+}
+
 .chipWrapper {
     overflow-x: scroll;
     overflow-y: hidden;
