@@ -26,6 +26,7 @@ import { IconSearch, IconChevronDown, IconChevronUp, IconGalaxy } from '@tabler/
 import { useLocalStorage } from '@mantine/hooks';
 import { defaultUser } from '@/storage/storage';
 import UserAuth from '@/app/utils/auth';
+import Link from 'next/link';
 
 const FilterSection = ({
   title,
@@ -124,11 +125,7 @@ export default function MovieList(props) {
   });
   const [opened, setOpened] = useState(false);
   const [user, setUser] = useLocalStorage(defaultUser);
-  const [startIndex, setStartIndex] = useState(0);
-  const batchSize = 10;
-  const pageSize = 20; // how many movies per batch
-  const [loading, setLoading] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
+  const batchSize = 12;
 
   const [start, setStart] = useState(0);
   const auth = new UserAuth();
@@ -142,7 +139,7 @@ export default function MovieList(props) {
             "Authorization": `Bearer ${auth.getToken()}` 
         }
       } : undefined;
-      
+
       const res = await fetch(
         `http://localhost:5000/api/${props.endpoint}?start=${startIndex}&end=${startIndex + batchSize}${recommendationProp}`,
         headers
@@ -183,30 +180,6 @@ export default function MovieList(props) {
   const loadMore = () => {
     fetchMovies(start);
   };
-
-  // const MOVIES_API_URL = 'http://127.0.0.1:5000/api/movies';
-
-  // useEffect(() => {
-  //   async function fetchMovies() {
-  //     try {
-  //       const response = await fetch(MOVIES_API_URL);
-  //       if (!response.ok) throw new Error('Network response was not ok');
-  //       const data = await response.json();
-  //       setMovies(data);
-  //     } catch (error) {
-  //       console.error('Failed to fetch movies:', error);
-  //       setMovies([]);
-  //     }
-  //   }
-  //   fetchMovies();
-  // }, []);
-
-  // useEffect(() => {
-  //   const filtered = filterMovies(movies, filters);
-  //   setFilteredMovies(filtered);
-  // }, [filters, movies]);
-  
-  // console.log(filteredMovies.map(m => m.id));
 
   return (
     <Container>
@@ -276,15 +249,15 @@ export default function MovieList(props) {
           ) : (
                 <SimpleGrid cols={4} spacing="lg" breakpoints={[{ maxWidth: 'sm', cols: 1 }]}>
                   {filteredMovies.map((movie) => (
-                    <a key={movie.id} href={`/movie/${movie.id}`} style={{ cursor: 'pointer', textDecoration: 'none' }}>
+                    <Link key={movie.id} href={`/movie/${movie.id}`}>
                       <Card shadow="sm" padding="lg" radius="md" withBorder>
                         <Card.Section>
-                          <Image src={movie.poster} height={180} alt={movie.title} fit="cover" />
+                          <Image src={movie.poster} height={323} alt={movie.title} fit="cover" />
                         </Card.Section>
                         <Text weight={500} size="lg" mt="md">{movie.title}</Text>
                         <Text size="sm" color="dimmed">{movie.year} • {movie.genre.join(', ')}</Text>
                       </Card>
-                    </a>
+                    </Link>
                   ))}
                 </SimpleGrid>
               )}

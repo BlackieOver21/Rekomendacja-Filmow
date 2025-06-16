@@ -3,14 +3,12 @@ import { redirect } from 'next/navigation';
 
 export async function GET() {
     // fetch random number from server (cant go past min/max movie id)
-    const id = await fetchFromAPI(
-        '/movie/random',
+    const data = await fetchFromAPI(
+        '/movies/random',
         undefined,
         FetchMethod.GET,
-        (data) => { return data.id; }
+        (data) => { return data; }
     );
 
-    // console.log(id)
-
-    redirect('/movie/' + id);
+    redirect('/movie/' + data.data.id);
 }
