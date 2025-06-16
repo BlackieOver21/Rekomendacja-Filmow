@@ -189,7 +189,7 @@ const MoviePage = () => {
 
       <Group mt="md" wrap="wrap">
         {movie.genre.map((genre) => (
-          <Chip size="sm" key={genre} checked={true} variant='filled' >{genre}</Chip>
+          <Chip size="xxs" key={genre} checked={true} variant='filled'><span className={style.chip}>{genre}</span></Chip>
         ))}
       </Group>
     </div>
