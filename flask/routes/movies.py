@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify, abort
 from models import Movie, db
 import misc.func as fm
+from reco.fake_reco import reco
 
 movie_bp = Blueprint('movies', __name__)
 
@@ -28,7 +29,7 @@ def list_movies():
     recommended_ids = set()
     if user_id is not None:
         try:
-            recommended_ids = set(fm.get_recommendations_for_user(user_id))
+            recommended_ids = set(reco(user_id, movies))
         except Exception:
             abort(400, description="Invalid user or recommendation error")
 
