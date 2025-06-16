@@ -11,7 +11,6 @@ class User(db.Model):
     watchlist = db.relationship('Watchlist', back_populates='user')
     rating = db.relationship('Rating', back_populates='user')
 
-
 class Watchlist(db.Model):
     __tablename__ = 'watchlist'
     user_id = db.Column(db.Integer, db.ForeignKey('account.id'), nullable=False, primary_key=True)
@@ -19,8 +18,6 @@ class Watchlist(db.Model):
 
     user = db.relationship('User', back_populates='watchlist')
     movie = db.relationship('Movie', back_populates='watchlist_items')
-
-
 
 class Movie(db.Model):
     __tablename__ = 'movie'
@@ -39,17 +36,12 @@ class Movie(db.Model):
     genre_items = db.relationship('MovieGenre', back_populates='movie_items')
     rating_items = db.relationship('Rating', back_populates='movie')
 
-    
-
-
 class Genre(db.Model):
     __tablename__ = 'genre'
     id = db.Column(db.Integer, primary_key=True)
     desc = db.Column(db.String(1024))
 
     movie_items = db.relationship('MovieGenre', back_populates='genre_items')
-
-
 
 class MovieGenre(db.Model):
     __tablename__ = 'movie_genre'
@@ -59,7 +51,6 @@ class MovieGenre(db.Model):
     movie_items = db.relationship('Movie', back_populates='genre_items')
     genre_items = db.relationship('Genre', back_populates='movie_items')
     
-
 class Rating(db.Model):
     __tablename__ = 'rating'
     user_id = db.Column(db.Integer, db.ForeignKey('account.id'), nullable=False, primary_key=True)

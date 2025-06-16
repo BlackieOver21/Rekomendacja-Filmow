@@ -50,13 +50,9 @@ def add_to_watchlist():
     if not movie:
         return jsonify({"msg": f"Movie with id {movie_id} not found"}), 404
 
-
-
     existing_entry = Watchlist.query.filter_by(user_id=user_id, movie_id=movie_id).first()
     if existing_entry:
         return jsonify({"msg": "Movie is already in your watchlist"}), 400
-
-
     # Dodanie do watchlisty
     new_entry = Watchlist(user_id=user_id, movie_id=movie_id )
     db.session.add(new_entry)
@@ -64,22 +60,10 @@ def add_to_watchlist():
 
     return jsonify({
         "msg": "Movie added to watchlist",
-        "id": new_entry.id,
         "movie_id": new_entry.movie_id,
-        "title": movie.title  # dodatkowo możesz zwrócić tytuł
+        "title": movie.title  
     }), 201
 
-
-
-
-# main.py (lub odpowiedni plik z trasami)
-
-
-
-
-# 
-# send the movie_id via json 
-#
 @profile_bp.route('/watchlist/<int:movie_id>', methods=['DELETE'])
 @jwt_required()
 def remove_from_watchlist(movie_id):
@@ -102,9 +86,6 @@ def remove_from_watchlist(movie_id):
         "movie_id": movie_id,
         "title": movie.title  
     }), 200
-
-
-
 
 @profile_bp.route('/recommendation', methods=['GET'])
 @jwt_required()
