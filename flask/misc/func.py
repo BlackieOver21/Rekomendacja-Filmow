@@ -9,6 +9,9 @@ from sqlalchemy.orm import joinedload
 import pandas as pd
 
 
+def mix_rating_dataset(rating, count, fake_rating, fake_count):
+    return count / (count + fake_count) * rating + fake_count / (count + fake_count) * fake_rating
+
 def fetch_movie_image(movie: Movie):
     try:
         tmdb_key = current_app.config['TMDB_API_KEY']
@@ -100,18 +103,45 @@ def batch_update_movie_images():
 
 def serialize_movie(movie):
     """
-    Helper to turn a Movie into JSON-friendly dict.
+    Turn a Movie into a JSON-friendly dict, using only the model's defined fields
+    plus genres, with vote_average/count blended with user ratings.
     """
+    # genres
     genres = [g.genre_items.desc for g in movie.genre_items if g.genre_items]
-   
+
+    # TMDB stats
+    tmdb_avg = movie.vote_average or 0
+    tmdb_count = movie.vote_count or 0
+
+    # user ratings
+    user_values = [r.value for r in movie.rating_items]
+    user_count = len(user_values)
+    user_avg = sum(user_values) / user_count if user_count else 0
+
+    # blended average and total count
+    blended_avg = mix_rating_dataset(
+        rating=tmdb_avg,
+        count=tmdb_count,
+        fake_rating=user_avg,
+        fake_count=user_count
+    )
+    total_count = tmdb_count + user_count
+
     return {
         "id": movie.id,
         "title": movie.title,
-        "year": movie.release_date.year if movie.release_date else None,
+        #"popularity": movie.popularity,
+        "year": movie.release_date.isoformat() if movie.release_date else None,
+        #"runtime": movie.runtime,
         "genre": genres,
-        "poster": movie.image_url,
-        "rating": movie.vote_average
+        "rating": round(blended_avg, 2) if blended_avg is not None else None,
+        #"vote_count": total_count,
+        #"imdb_id": movie.imdb_id,
+        #"tmdb_id": movie.tmdb_id,
+        "image_url": movie.image_url
     }
+
+
 
 def query_movies(query, start=None, end=None):
     if end is not None:

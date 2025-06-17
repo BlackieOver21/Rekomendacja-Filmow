@@ -1,8 +1,8 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, abort
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from misc import func as fm
 from reco.fake_reco import reco
-from models import db, Watchlist, Movie
+from models import db, Watchlist, Movie, User, Rating
 
 profile_bp = Blueprint('profile', __name__)
 
@@ -61,6 +61,8 @@ def add_to_watchlist():
         "title": movie.title  
     }), 201
 
+
+
 @profile_bp.route('/watchlist/<int:movie_id>', methods=['DELETE'])
 @jwt_required()
 def remove_from_watchlist(movie_id):
@@ -83,6 +85,8 @@ def remove_from_watchlist(movie_id):
         "movie_id": movie_id,
         "title": movie.title  
     }), 200
+
+
 
 @profile_bp.route('/recommendation', methods=['GET'])
 @jwt_required()
@@ -109,3 +113,37 @@ def recommendation():
         "id": recommended_movie.id,
         "title": recommended_movie.title
     })
+
+
+
+
+@profile_bp.route('user/purge/<int:user_id>', methods=['DELETE'])
+def purge_user_data(user_id):
+    user = User.query.get(user_id)
+    if not user:
+        abort(404, description="User not found")
+
+    Rating.query.filter_by(user_id=user_id).delete()
+    Watchlist.query.filter_by(user_id=user_id).delete()
+    db.session.commit()
+
+    return jsonify({
+        "message": f"Purged data for user {user_id}"
+    }), 200
+
+
+@profile_bp.route('user/delete/<int:user_id>', methods=['DELETE'])
+def delete_user(user_id):
+    user = User.query.get(user_id)
+    if not user:
+        abort(404, description="User not found")
+
+    Rating.query.filter_by(user_id=user_id).delete()
+    Watchlist.query.filter_by(user_id=user_id).delete()
+
+    db.session.delete(user)
+    db.session.commit()
+
+    return jsonify({
+        "message": f"Deleted user {user_id}"
+    }), 200

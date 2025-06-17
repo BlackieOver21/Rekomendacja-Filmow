@@ -2,6 +2,7 @@ from flask import Blueprint, request, jsonify
 from flask_jwt_extended import create_access_token,  jwt_required, get_jwt_identity
 from models import Rating, db
 import misc.func as fm
+from movies import get_ratings
 
 rating_bp = Blueprint('rating', __name__)
 
@@ -34,13 +35,14 @@ def create_rating():
 @rating_bp.route('/ratings/<int:movie_id>', methods=['GET'])
 @jwt_required()
 def get_rating(movie_id):
-    user_id = get_jwt_identity()
-    rating = Rating.query.filter_by(user_id=user_id, movie_id=movie_id).first()
-    if not rating:
-        return jsonify({"msg": "Rating not found"}), 404
-    return jsonify({
-        "rating": {"user_id": rating.user_id, "movie_id": rating.movie_id, "rating": rating.value, "comment": rating.comment}
-    }), 200
+    return get_ratings(movie_id)
+    # user_id = get_jwt_identity()
+    # rating = Rating.query.filter_by(user_id=user_id, movie_id=movie_id).first()
+    # if not rating:
+    #     return jsonify([]), 200 #jsonify({"msg": "Rating not found"}), 404
+    # return jsonify({
+    #     "rating": {"user_id": rating.user_id, "movie_id": rating.movie_id, "rating": rating.value, "comment": rating.comment}
+    # }), 200
 
 @rating_bp.route('/ratings/<int:movie_id>', methods=['PUT'])
 @jwt_required()

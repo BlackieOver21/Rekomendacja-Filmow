@@ -22,9 +22,7 @@ def list_movies():
     query = Movie.query.order_by(Movie.id)
 
     result = fm.query_movies(query, start, end)
-    
-
-    return jsonify(result)
+    return jsonify(result) #already serialized using serialize_movie
 
 
 @movie_bp.route('/movies/<int:movie_id>', methods=['GET'])
@@ -46,7 +44,7 @@ def get_ratings(movie_id):
     movie = Movie.query.get(movie_id)
     
     if movie is None:
-        abort(404, description="Movie not found")
+        jsonify([]), 200 #abort(404, description="Movie not found")
     movie
 
     ratings = (
@@ -57,6 +55,7 @@ def get_ratings(movie_id):
     rating_list = [
         {
             "user_id": r.user_id,
+            "movie_id": r.movie_id,
             "rating": r.value,
             "comment": r.comment
         }
