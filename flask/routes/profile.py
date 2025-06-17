@@ -117,8 +117,10 @@ def recommendation():
 
 
 
-@profile_bp.route('user/purge/<int:user_id>', methods=['DELETE'])
-def purge_user_data(user_id):
+@profile_bp.route('user/purge', methods=['DELETE'])
+@jwt_required()
+def purge_user_data():
+    user_id = get_jwt_identity()
     user = User.query.get(user_id)
     if not user:
         abort(404, description="User not found")
@@ -132,8 +134,10 @@ def purge_user_data(user_id):
     }), 200
 
 
-@profile_bp.route('user/delete/<int:user_id>', methods=['DELETE'])
-def delete_user(user_id):
+@profile_bp.route('user/delete', methods=['DELETE'])
+@jwt_required()
+def delete_user():
+    user_id = get_jwt_identity()
     user = User.query.get(user_id)
     if not user:
         abort(404, description="User not found")

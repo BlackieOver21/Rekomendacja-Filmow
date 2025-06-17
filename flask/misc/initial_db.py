@@ -102,8 +102,9 @@ def import_movies_if_empty(
     df['tmdb_id'] = df['tmdb_id'].where(pd.notna(df['tmdb_id']), None)
 
 
-    #do not try,  2h wasted
+    #do not try,  4h wasted
     #increase the /\ counter if you fail
+    #seems to work, but it's not a good solution
     # 1) First coerce everything to numeric, invalid → NaN
     df['runtime'] = pd.Series(clean_runtime_column(df['runtime']), index=df.index, dtype=object) 
     df['vote_count'] = pd.Series(clean_runtime_column(df['vote_count']), index=df.index, dtype=object) 
