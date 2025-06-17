@@ -1,8 +1,8 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, abort
 from flask_jwt_extended import create_access_token,  jwt_required, get_jwt_identity
 from werkzeug.security import generate_password_hash, check_password_hash
 
-from models import db, User
+from models import db, User, Watchlist, Rating
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -91,4 +91,54 @@ def change_password():
         "msg": "Password changed successfully",
         "access_token": access_token,
         "user": {"id": user.id, "username": user.username}
+    }), 200
+
+
+
+@auth_bp.route('/user/purge', methods=['DELETE'])
+@jwt_required()
+def purge_user_data():
+    user_id = get_jwt_identity()
+    user = User.query.get(user_id)
+    if not user:
+        abort(404, description="User not found")
+
+    data = request.get_json() or {}
+    password = data.get('password')
+    if not password or not check_password_hash(user.password, password):
+        abort(401, description="Invalid password")
+
+    # Delete user-related data
+    Rating.query.filter_by(user_id=user_id).delete()
+    Watchlist.query.filter_by(user_id=user_id).delete()
+    db.session.commit()
+
+    return jsonify({
+        "message": f"Purged data for user {user_id}"
+    }), 200
+
+
+@auth_bp.route('/user/delete', methods=['DELETE'])
+@jwt_required()
+def delete_user():
+    user_id = get_jwt_identity()
+    user = User.query.get(user_id)
+    if not user:
+        abort(404, description="User not found")
+
+    data = request.get_json() or {}
+    password = data.get('password')
+    if not password or not check_password_hash(user.password, password):
+        abort(401, description="Invalid password")
+
+    # Delete associated entries
+    Rating.query.filter_by(user_id=user_id).delete()
+    Watchlist.query.filter_by(user_id=user_id).delete()
+
+    # Delete user account
+    db.session.delete(user)
+    db.session.commit()
+
+    return jsonify({
+        "message": f"Deleted user {user_id}"
     }), 200

@@ -3,6 +3,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from misc import func as fm
 from reco.fake_reco import reco
 from models import db, Watchlist, Movie, User, Rating
+from werkzeug.security import check_password_hash
 
 profile_bp = Blueprint('profile', __name__)
 
@@ -117,37 +118,3 @@ def recommendation():
 
 
 
-@profile_bp.route('user/purge', methods=['DELETE'])
-@jwt_required()
-def purge_user_data():
-    user_id = get_jwt_identity()
-    user = User.query.get(user_id)
-    if not user:
-        abort(404, description="User not found")
-
-    Rating.query.filter_by(user_id=user_id).delete()
-    Watchlist.query.filter_by(user_id=user_id).delete()
-    db.session.commit()
-
-    return jsonify({
-        "message": f"Purged data for user {user_id}"
-    }), 200
-
-
-@profile_bp.route('user/delete', methods=['DELETE'])
-@jwt_required()
-def delete_user():
-    user_id = get_jwt_identity()
-    user = User.query.get(user_id)
-    if not user:
-        abort(404, description="User not found")
-
-    Rating.query.filter_by(user_id=user_id).delete()
-    Watchlist.query.filter_by(user_id=user_id).delete()
-
-    db.session.delete(user)
-    db.session.commit()
-
-    return jsonify({
-        "message": f"Deleted user {user_id}"
-    }), 200
