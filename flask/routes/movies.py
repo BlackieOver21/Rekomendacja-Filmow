@@ -20,7 +20,9 @@ def list_movies():
     end = request.args.get('end', default=None, type=int)
 
     query = Movie.query.order_by(Movie.id)
+
     result = fm.query_movies(query, start, end)
+    
 
     return jsonify(result)
 

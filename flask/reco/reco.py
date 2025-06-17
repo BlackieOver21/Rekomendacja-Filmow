@@ -50,10 +50,10 @@ def load_model():
     model = None
 
     try:
-        with open("ml_models\user_enc.json", 'r', encoding='utf-8') as f:
+        with open("ml_models\\user_enc.json", 'r', encoding='utf-8') as f:
             user2enc = json.load(f) 
             num_users = max(user2enc.values()) + 1
-        with open("ml_models\movie_enc.json", 'r', encoding='utf-8') as f:
+        with open("ml_models\\movie_enc.json", 'r', encoding='utf-8') as f:
             movie2enc = json.load(f)
             num_movies = max(movie2enc.values()) + 1       
         

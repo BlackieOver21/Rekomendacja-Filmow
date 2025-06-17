@@ -9,73 +9,76 @@ from sqlalchemy.orm import joinedload
 import pandas as pd
 
 
-def fetch_movie_image(movie: Movie) -> str:
-    """
-    Fetch movie image URL from TMDB using available identifiers.
-    Returns image URL string or None.
-    """
-    tmdb_key   = current_app.config['TMDB_API_KEY']
-    img_base   = current_app.config.get('TMDB_IMAGE_BASE_URL', 'https://image.tmdb.org/t/p/')
-    api_prefix = 'https://api.themoviedb.org/3'
+def fetch_movie_image(movie: Movie):
+    try:
+        tmdb_key = current_app.config['TMDB_API_KEY']
+        img_base_url = current_app.config.get('TMDB_IMAGE_BASE_URL', 'https://image.tmdb.org/t/p/')
+        img_size = current_app.config.get('TMDB_POSTER_SIZE', 'w780') # Use a reasonable default size
+        api_base_url = 'https://api.themoviedb.org/3'
+        language = current_app.config.get('TMDB_LANGUAGE', 'en-US')
+    except KeyError:
+        current_app.logger.error("[TMDB] TMDB_API_KEY is not configured.")
+        return None
 
-    def _log_fail(context, resp):
-        current_app.logger.warning(
-            f"[TMDB] {context} failed ({resp.status_code}): {resp.text}"
-        )
+    session = requests.Session()
+    session.params = {'api_key': tmdb_key, 'language': language}
 
-    # 1) Try by TMDB ID
+    def _make_request(endpoint, params = None):
+        """Helper to make a request, handle errors, and return JSON."""
+        try:
+            resp = session.get(f"{api_base_url}{endpoint}", params=params)
+            resp.raise_for_status()  # Raises HTTPError for bad responses (4xx or 5xx)
+            return resp.json()
+        except requests.exceptions.RequestException as e:
+            current_app.logger.warning(f"[TMDB] API request to '{endpoint}' failed: {e}")
+            return None
+
+    def _get_poster_url(data):
+        """Extracts and constructs the poster URL from API response data."""
+        poster_path = data.get('poster_path')
+        if poster_path:
+            return f"{poster_path}" #{img_base_url}{img_size}
+        return None
+
+    #tmdbid
     if movie.tmdb_id:
-        resp = requests.get(
-            f"{api_prefix}/movie/{movie.tmdb_id}",
-            params={'api_key': tmdb_key, 'language': 'en-US'}
-        )
-        if resp.ok:
-            data = resp.json()
-            if data.get('poster_path'):
-                return f"{img_base}original{data['poster_path']}"
-        else:
-            _log_fail(f"details for TMDB ID {movie.tmdb_id}", resp)
+        data = _make_request(f"/movie/{movie.tmdb_id}")
+        if data and (poster_url := _get_poster_url(data)):
+            current_app.logger.info(f"[TMDB] Found poster for TMDB ID {movie.tmdb_id}")
+            return poster_url
 
-    # 2) Try by IMDb ID via /find
+    #imdb
     if movie.imdb_id:
-        resp = requests.get(
-            f"{api_prefix}/find/{movie.imdb_id}",
-            params={
-                'api_key': tmdb_key,
-                'external_source': 'imdb_id',
-                'language': 'en-US'
-            }
-        )
-        if resp.ok:
-            results = resp.json().get('movie_results', [])
-            if results and results[0].get('poster_path'):
-                return f"{img_base}original{results[0]['poster_path']}"
-        else:
-            _log_fail(f"find by IMDb ID {movie.imdb_id}", resp)
+        find_params = {'external_source': 'imdb_id'}
+        data = _make_request(f"/find/{movie.imdb_id}", params=find_params)
+        if data and data.get('movie_results'):
+            first_result = data['movie_results'][0]
+            if poster_url := _get_poster_url(first_result):
+                current_app.logger.info(f"[TMDB] Found poster for IMDb ID {movie.imdb_id}")
+                return poster_url
 
-    # 3) Fallback: title + year search
+    #tile & year
     if movie.title and movie.release_date:
-        resp = requests.get(
-            f"{api_prefix}/search/movie",
-            params={
-                'api_key': tmdb_key,
-                'language': 'en-US',
-                'query': movie.title,
-                'primary_release_year': movie.release_date.year,
-            }
-        )
-        if resp.ok:
-            results = resp.json().get('results', [])
-            if results and results[0].get('poster_path'):
-                return f"{img_base}original{results[0]['poster_path']}"
-        else:
-            _log_fail(f"search by title/year {movie.title}/{movie.release_date.year}", resp)
+        search_params = {
+            'query': movie.title,
+            'primary_release_year': movie.release_date.year,
+        }
+        data = _make_request("/search/movie", params=search_params)
+        if data and data.get('results'):
+            first_result = data['results'][0]
+            if poster_url := _get_poster_url(first_result):
+                current_app.logger.info(f"[TMDB] Found poster via search for '{movie.title}' ({movie.release_date.year})")
+                return poster_url
 
+    current_app.logger.warning(f"[TMDB] Could not find poster for movie: {movie.title}")
     return None
 
 
 def update_movie_image(movie : Movie):
     """Update and store the image URL for a single movie"""
+    if movie.image_url:
+        return None
+
     image_url = fetch_movie_image(movie)
     if image_url:
         movie.image_url = image_url
@@ -88,7 +91,8 @@ def batch_update_movie_images():
     movies = Movie.query.all()
     updated = 0
     for movie in movies:
-        if update_movie_image(movie):
+        status = update_movie_image(movie)
+        if status == True:
             updated += 1
             sleep(0.05) #limit request rate
     return f"Updated {updated}/{len(movies)} movie images"
@@ -118,11 +122,13 @@ def query_movies(query, start=None, end=None):
     movies = query.all()
 
     # Uzupełnij brakujące obrazki (jak w list_movies)
-    if end is not None and end - start < 50:
+    update_cnt = 0
+    if end is not None:
         for mov in movies:
-            if not mov.image_url:
+            if update_cnt < 50 and not mov.image_url:
                 update_movie_image(mov)
                 sleep(0.03)
+                update_cnt +=1
 
     # Serializacja
     result = []
@@ -130,7 +136,7 @@ def query_movies(query, start=None, end=None):
         data = serialize_movie(m)
         result.append(data)
 
-    return 
+    return result
 
 # def get_recommendations(user_id):
 

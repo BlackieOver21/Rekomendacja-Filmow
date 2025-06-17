@@ -4,6 +4,7 @@ import ast
 from datetime import datetime
 import numpy as np
 import math
+from tqdm import tqdm
 
 def import_movies_if_empty(
     movies_path='movies_metadata.csv',
@@ -20,7 +21,7 @@ def import_movies_if_empty(
     movie_cols = [
         'id', 'title', 'genres',
         'popularity', 'release_date', 'runtime',
-        'vote_average', 'vote_count'
+        'vote_average', 'vote_count', "poster_path", "imdb_id"
     ]
     df = pd.read_csv(movies_path, low_memory=False, usecols=movie_cols, dtype='string')
 
@@ -32,7 +33,9 @@ def import_movies_if_empty(
         'release_date'      : 'string',
         'runtime'           : 'Int32',
         'vote_average'      : 'float32',
-        'vote_count'        : 'Int64'
+        'vote_count'        : 'Int64',
+        'poster_path'       : "string",
+        "imdb_id"           : "string"
     }
 
     for col, dtype in target_dtypes.items():
@@ -49,47 +52,49 @@ def import_movies_if_empty(
 
 
     # Load and clean links data
-    links_df = pd.read_csv(links_path, usecols=['movieId', 'imdbId', 'tmdbId'], dtype={
-        'movieId': 'int32',      # or 'Int64' for nullable ints
-        'imdbId': 'string',     
-        'tmdbId': 'string'        
-    })
+    # links_df = pd.read_csv(links_path, usecols=['movieId', 'imdbId', 'tmdbId'], dtype={
+    #     'movieId': 'int32',      # or 'Int64' for nullable ints
+    #     'imdbId': 'string',     
+    #     'tmdbId': 'string'        
+    # })
 
-    links_df = links_df[links_df['movieId'].apply(lambda x: str(x).isdigit())]
-    links_df['movieId'] = links_df['movieId'].astype(int)
+    # links_df = links_df[links_df['movieId'].apply(lambda x: str(x).isdigit())]
+    # links_df['movieId'] = links_df['movieId'].astype(int)
     
-    links_df['imdbId'] = links_df['imdbId'].apply(
-    lambda x: str(x) if pd.notna(x) and str(x).isdigit() else None
-    )
+    # links_df['imdbId'] = links_df['imdbId'].apply(
+    # lambda x: str(x) if pd.notna(x) and str(x).isdigit() else None
+    # )
 
-    # Clean tmdbId: int or None
+    # # Clean tmdbId: int or None
 
-    links_df['tmdbId'] = pd.Series( [int(x) if str(x).isdigit() else None for x in links_df['tmdbId']] , dtype=object) 
+    # links_df['tmdbId'] = pd.Series( [int(x) if str(x).isdigit() else None for x in links_df['tmdbId']] , dtype=object) 
 
 
-    links_df = links_df.drop_duplicates(subset=['movieId'])
-    # Rename to match Movie fields
-    links_df = links_df.rename(columns={
-        'movieId': 'id',
-        'imdbId': 'imdb_id',
-        'tmdbId': 'tmdb_id'
-    })
+    # links_df = links_df.drop_duplicates(subset=['movieId'])
+    # # Rename to match Movie fields
+    # links_df = links_df.rename(columns={
+    #     'movieId': 'id',
+    #     'imdbId': 'imdb_id',
+    #     'tmdbId': 'tmdb_id'
+    # })
 
-    links_df = links_df.drop_duplicates(subset=['tmdb_id'])
+    # links_df = links_df.drop_duplicates(subset=['tmdb_id'])
 
     # Clean movie dataframe
-    df = df.dropna(subset=['id', 'title'])
+    df.rename(columns={'id': 'tmdb_id'}, inplace=True)
+    df = df.dropna(subset=['title'])   #'id',
+    df['id'] = range(0, len(df))
     df = df[df['id'].apply(lambda x: str(x).isdigit())]
     df['id'] = df['id'].astype('int32')
-    df = df.drop_duplicates(subset=['id'])
-    
+    df.drop_duplicates(subset=['tmdb_id'], keep='first', inplace=True)
+    df.drop_duplicates(subset=['imdb_id'], keep='first', inplace=True)
 
-    # Merge link IDs into movies
-    df = df.merge(
-        links_df,
-        on='id',
-        how='left'
-    )
+    # # Merge link IDs into movies
+    # df = df.merge(
+    #     links_df,
+    #     on='id',
+    #     how='left'
+    # )
 
 
     # magic lines, won't work at all without them for whatever reason
@@ -100,8 +105,13 @@ def import_movies_if_empty(
     #do not try,  2h wasted
     #increase the /\ counter if you fail
     # 1) First coerce everything to numeric, invalid → NaN
-    df['runtime'] = pd.Series(clean_runtime_column(df['runtime']), dtype=object) 
-    df['vote_count'] = pd.Series(clean_runtime_column(df['vote_count']), dtype=object) 
+    df['runtime'] = pd.Series(clean_runtime_column(df['runtime']), index=df.index, dtype=object) 
+    df['vote_count'] = pd.Series(clean_runtime_column(df['vote_count']), index=df.index, dtype=object) 
+    
+    #last ditch effort
+    for column in ["id", "tmdb_id", "imdb_id", "poster_path"]:
+        df[column] = pd.Series(clean_runtime_column(df[column]), index=df.index, dtype=object) 
+
 
     assert df['runtime'].dtype == object
     assert df['vote_count'].dtype == object
@@ -130,7 +140,7 @@ def import_movies_if_empty(
 
     # Insert movies with metadata, genres, and link IDs
     batch_cntr = 0
-    for _, row in df.iterrows():
+    for _, row in tqdm(df.iterrows()):
         #print(row)
         movie = Movie(
             id=row['id'],
@@ -141,7 +151,8 @@ def import_movies_if_empty(
             vote_average=row.get('vote_average'),
             vote_count=row.get('vote_count'),
             imdb_id=row.get('imdb_id'),
-            tmdb_id=row.get('tmdb_id')
+            tmdb_id=row.get('tmdb_id'),
+            image_url = row.get("poster_path")
         )
         # Associate genres
         try:
@@ -157,11 +168,19 @@ def import_movies_if_empty(
         db.session.add(movie)
         batch_cntr += 1
         # Commit in batches
-        if batch_cntr >= 500:
-            db.session.commit()
+        try:
+            if batch_cntr >= 100:
+                db.session.commit()
+                batch_cntr = 0
+        except Exception as e:
             batch_cntr = 0
+            print(e)
     # Final commit
-    db.session.commit()
+    try:
+        db.session.commit()
+    except Exception as e:
+        print(e)
+        pass
 
     print(f"Imported {df.shape[0]} movies with full metadata and links.")
 
