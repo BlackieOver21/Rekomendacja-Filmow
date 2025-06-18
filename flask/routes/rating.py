@@ -2,7 +2,7 @@ from flask import Blueprint, request, jsonify
 from flask_jwt_extended import create_access_token,  jwt_required, get_jwt_identity
 from models import Rating, db
 import misc.func as fm
-from movies import get_ratings
+from .movies import get_ratings
 
 rating_bp = Blueprint('rating', __name__)
 
