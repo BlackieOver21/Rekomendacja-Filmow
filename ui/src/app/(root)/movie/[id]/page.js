@@ -8,6 +8,7 @@ import { fetchFromAPI, FetchMethod } from '@/utils/utils';
 import style from './movie.module.css';
 import { IconStarFilled } from '@tabler/icons-react';
 import { usePathname } from 'next/navigation';
+import { useMemo } from 'react';
 
 export default function MoviePage() {
   const [movieId, setMovieId] = useState(null);
@@ -52,7 +53,7 @@ export default function MoviePage() {
     <div style={{ padding: '20px', maxWidth: '900px', margin: '0 auto' }}>
       <div className={style.titleCard}>
         <Card shadow="0" padding="0" radius="lg" className={style.poster}>
-          <Image src={movie.poster} height={512} alt={movie.title} fit="cover" />
+          <Image src={"http://image.tmdb.org/t/p/w300"+movie.image_url} height={512} alt={movie.title} fit="cover" />
         </Card>
 
         <div className={style.details}>
@@ -67,7 +68,7 @@ export default function MoviePage() {
             </div>
             <div className={style.detailsCol}>
               <div className={style.alignVertically}>
-                <span>{movie.rating ?? "-"}</span> 
+                <span>{movie.rating.toFixed(1) ?? "-"}</span> 
                 <IconStarFilled/>
               </div>
               <span>{movie.year ?? "-"}</span>
@@ -126,7 +127,8 @@ function UserRatingForm({ user, token, movieId }) {
   const [reviewText, setReviewText] = useState('');
   const [reviewRating, setReviewRating] = useState(0);
 
-  const review = new UserReview();
+  //const review = new UserReview();
+  const review = useMemo(() => new UserReview(), []);
 
   useEffect(() => {
     async function loadRating() {
@@ -136,7 +138,7 @@ function UserRatingForm({ user, token, movieId }) {
 
           setMyReview(userReviewsData.rating);
           setReviewText(userReviewsData.rating.comment);
-          setReviewRating(userReviewsData.rating.value);
+          setReviewRating(userReviewsData.rating.rating);
         }
       } catch (err) {
         console.error('Error loading ratings:', err);

@@ -29,6 +29,7 @@ import { IconStarFilled } from '@tabler/icons-react';
 import { fetchFromAPI, FetchMethod } from '@/utils/utils';
 import { IconX } from '@tabler/icons-react';
 import { IconCheck } from '@tabler/icons-react';
+import { useMemo } from 'react';
 
 export default function MovieList(props) {
   const [movies, setMovies] = useState([]);
@@ -37,7 +38,7 @@ export default function MovieList(props) {
   const batchSize = 12;
 
   const [start, setStart] = useState(0);
-  const auth = new UserAuth();
+  const auth = useMemo(() => new UserAuth(), []);
 
   const fetchMovies = useCallback(async (startIndex) => {
     try {
@@ -62,12 +63,12 @@ export default function MovieList(props) {
     catch (error) {
       console.error(error);
     }
-  }, [user, props, batchSize, auth, setMovies, setStart]);
+  }, [props, batchSize, auth, setMovies, setStart]);
 
   // Fetch first batch only once on mount
   useEffect(() => {
     fetchMovies(0);
-  }, []);
+  }, [fetchMovies]);
 
   const loadMore = useCallback(() => {
     fetchMovies(start);
@@ -174,11 +175,12 @@ function FiltersAndSearch({ setFilteredMovies, movies }) {
 }
 
 function MoviePoster({ movie }) {
+  console.log("MoviePoster", movie);
   return (
     <Link href={`/movie/${movie.id}`}>
       <Card padding="lg" radius="md" className={style.movieCardWrapper}>
         <Card.Section className={style.movieCard}>
-          <BackgroundImage src={movie.poster} fit="cover">
+          <BackgroundImage src={"http://image.tmdb.org/t/p/w300"+movie.image_url} fit="cover">
             <div className={style.movieCard}>
               <div className={style.movieCardInfoWrapper}>
 
@@ -186,7 +188,7 @@ function MoviePoster({ movie }) {
 
                 <div className={style.ratingAndYear}>
                   <div className={style.alignVertically}>
-                    <Text size="sm" color="dimmed">{movie.rating ?? "-"}</Text> 
+                    <Text size="sm" color="dimmed">{movie.rating.toFixed(1) ?? "-"}</Text> 
                     <IconStarFilled size={16}/>
                   </div>
                   <Text size="sm" color="dimmed">{movie.year}</Text>

@@ -51,7 +51,7 @@ function Ad() {
       </Title>
 
       <Text className={styles.description}>
-        Don't know what to watch next? Our AI can take a look at your watchlist, ratings and current mood - and show you movies perfect for the moment.
+        Don&apost know what to watch next? Our AI can take a look at your watchlist, ratings and current mood - and show you movies perfect for the moment.
         <br/>
         <br/>
         Discover today!

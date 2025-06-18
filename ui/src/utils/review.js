@@ -15,6 +15,12 @@ export default class UserReview {
         return data;
     }
 
+    async fetchUserReviewForMovie(userId, movieId, token) {
+        const allReviews = await this.fetchUserReviews(userId, token);  
+        // assuming allReviews is an array
+        return allReviews.find(r => r.movie_id === parseInt(movieId)) || null;
+    }
+
     async fetchUserReviews(movieId, token) {
         const { success, data } = await fetchFromAPI(
             `/ratings/${movieId}`, 

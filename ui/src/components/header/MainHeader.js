@@ -6,9 +6,10 @@ import { Button, Grid, Menu, Tabs } from "@mantine/core";
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useLocalStorage } from "@mantine/hooks";
-import { IconChevronDown } from "@tabler/icons-react";
+import { IconChevronDown, IconStarOff } from "@tabler/icons-react";
 import { IconPlayerPlay } from "@tabler/icons-react";
 import { IconSettings } from "@tabler/icons-react";
+import { IconStarFilled, IconStar } from "@tabler/icons-react"; 
 import { IconLogout } from "@tabler/icons-react";
 import { defaultUser } from "@/storage/storage";
 import UserAuth from "@/utils/auth";
@@ -49,7 +50,8 @@ function LoginButtons() {
     auth.logout();
     setUser(null);
     router.push("/recommended");
-  });
+  }, [user, setUser, router]);
+  
 
   return (
     <div className={styles.loginButtonsWrapper}>
@@ -66,6 +68,12 @@ function LoginButtons() {
             </Button>
           </Menu.Target>
           <Menu.Dropdown>
+            <Link href={"/recommended"} passHref>
+              <Menu.Item leftSection={<IconStar size={16} stroke={1.5} />}>
+                Recommended
+              </Menu.Item>
+            </Link>
+
             <Link href={"/profile/watchlist"} passHref>
               <Menu.Item leftSection={<IconPlayerPlay size={16} stroke={1.5} />}>
                 Watchlist

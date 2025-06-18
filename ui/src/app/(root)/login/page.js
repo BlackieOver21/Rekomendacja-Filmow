@@ -33,7 +33,7 @@ export default function Login() {
       }
     }
     login();
-  }, [username, password, setLoggedInUser]); 
+  }, [username, password, setLoggedInUser, router]); 
 
   return (
     <Container size={420} my={80}>
